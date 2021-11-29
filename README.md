@@ -1,2 +1,2 @@
 # AI_XRF
-AI software for X-ray fluorescence imaging analysis.
+Software for X-ray fluorescence imaging analysis using AI tools.
