@@ -1,5 +1,5 @@
 #imports
-from patches2d import Patches2D
+from tools.misc.patches2d import Patches2D
 
 import cv2
 import os, h5py, collections, sys
