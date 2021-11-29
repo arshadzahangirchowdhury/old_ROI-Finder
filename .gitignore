@@ -23,8 +23,8 @@ __pycache__/
 !annotated_xrf_data\raw_cells\.gitkeep
 
 # Images
-.tif
-.tiff
+*.tif
+*.tiff
 
 # data
-.h5
+*.h5
