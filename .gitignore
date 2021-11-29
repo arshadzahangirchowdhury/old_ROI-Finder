@@ -13,7 +13,11 @@ __pycache__/
 \raw_xrf_data
 \annotated_xrf_data
 
-
+# exception to the rule
+!annotated_xrf_data\.gitkeep
+!annotated_xrf_data\accept\.gitkeep
+!annotated_xrf_data\reject\.gitkeep
+!annotated_xrf_data\raw_cells\.gitkeep
 
 # Images
 .tif
