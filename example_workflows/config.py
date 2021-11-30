@@ -17,6 +17,7 @@ import glob
 import h5py
 import time
 from distutils.dir_util import copy_tree
+from shutil import copyfile, copy, copy2
 
 
 from scipy.ndimage.filters import median_filter
