@@ -16,6 +16,7 @@ import pandas as pd
 import glob
 import h5py
 import time
+from distutils.dir_util import copy_tree
 
 
 from scipy.ndimage.filters import median_filter
