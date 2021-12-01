@@ -21,7 +21,6 @@ from shutil import copyfile, copy, copy2
 
 
 from scipy.ndimage.filters import median_filter
-from ImageStackPy import Img_Viewer as VIEW
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -29,9 +28,6 @@ import tifffile as tiff
 
 
 from ct_segnet import viewer
-
-
-from ImageStackPy import ImageProcessing as IP
 
 from ipywidgets import interact
 import ipywidgets as widgets
