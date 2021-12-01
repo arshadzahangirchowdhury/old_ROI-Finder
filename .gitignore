@@ -25,6 +25,9 @@ __pycache__/
 # Images
 *.tif
 *.tiff
+*.jpg
+*.jpeg
+*.png
 
 # data
 *.h5
