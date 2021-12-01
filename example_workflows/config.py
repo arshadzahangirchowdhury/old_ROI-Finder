@@ -60,14 +60,18 @@ from tools.misc.patches2d import Patches2D
 
 
 
-
+#PATH DEFINITIONS
 # Set the directory where the FILEChooser widget will open up to read .h5 files contating xrf images
-
 
 annot_dir='annotated_XRF'
 base__dir_path=os.path.join(os.path.join(os.path.dirname(os.getcwd()),annot_dir), 'raw_cells')
 h5_dir = base__dir_path
 default_path = h5_dir 
+
+#FIGURE DEFINITIONS
+
+global CROSS_HAIR_SIZE
+CROSS_HAIR_SIZE=15
 
 
 
