@@ -8,3 +8,6 @@ Software for X-ray fluorescence imaging analysis using AI tools.
 3. Segmenter tool is used to select .h5 files containing XRF images and extract region of interests (cells).
 4. Annotator tool is used to bin the extracted cells in two groups, accepts or rejects corresponding to alive or dead cells.
 
+## Optional parameters 
+
+1. In example workflows, change definitions to adjust how figures are rendered.
