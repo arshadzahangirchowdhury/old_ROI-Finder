@@ -10,4 +10,4 @@ Software for X-ray fluorescence imaging analysis using AI tools.
 
 ## Optional parameters 
 
-1. In example workflows, change definitions to adjust how figures are rendered.
+1. In example workflows, change definitions inside config.py to adjust how figures are rendered.
