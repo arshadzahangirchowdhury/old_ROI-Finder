@@ -27,7 +27,8 @@ import matplotlib as mpl
 import tifffile as tiff
 
 
-from ct_segnet import viewer
+from matplotlib_scalebar.scalebar import ScaleBar
+
 
 from ipywidgets import interact
 import ipywidgets as widgets
@@ -70,8 +71,10 @@ default_path = h5_dir
 
 #FIGURE DEFINITIONS
 
-global CROSS_HAIR_SIZE
+global CROSS_HAIR_SIZE, SCALE_UNIT_FACTOR
 CROSS_HAIR_SIZE=15
+
+SCALE_UNIT_FACTOR=0.000001
 
 
 
