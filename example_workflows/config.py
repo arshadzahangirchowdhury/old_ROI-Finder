@@ -71,10 +71,16 @@ default_path = h5_dir
 
 #FIGURE DEFINITIONS
 
-global CROSS_HAIR_SIZE, SCALE_UNIT_FACTOR
+global CROSS_HAIR_SIZE, SCALE_UNIT_FACTOR, FIGSIZE, cbar_position1,cbar_position2,cbar_position3
 CROSS_HAIR_SIZE=15
 
 SCALE_UNIT_FACTOR=0.000001
+
+FIGSIZE=(9, 2.8)
+
+cbar_position1=[0.055, 0.11, 0.255, 0.01]
+cbar_position2=[0.38, 0.11, 0.255, 0.01]
+cbar_position3=[0.71, 0.11, 0.255, 0.01]
 
 
 
