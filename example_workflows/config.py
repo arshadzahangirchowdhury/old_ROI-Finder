@@ -61,6 +61,9 @@ from tools.misc.patches2d import Patches2D
 
 
 
+
+
+
 #PATH DEFINITIONS
 # Set the directory where the FILEChooser widget will open up to read .h5 files contating xrf images
 
@@ -68,6 +71,12 @@ annot_dir='annotated_XRF'
 base__dir_path=os.path.join(os.path.join(os.path.dirname(os.getcwd()),annot_dir), 'raw_cells')
 h5_dir = base__dir_path
 default_path = h5_dir 
+
+#OTHER DEFINITIONS
+global VALUE_OFFSET, NORM_CH
+
+NORM_CH='us_ic'
+VALUE_OFFSET=1e-12
 
 #FIGURE DEFINITIONS
 
@@ -78,11 +87,15 @@ SCALE_UNIT_FACTOR=0.000001
 
 FIGSIZE=(9, 2.8)
 
+#For adjusting colorbars in segmenter
 cbar_position1=[0.055, 0.11, 0.255, 0.01]
 cbar_position2=[0.38, 0.11, 0.255, 0.01]
 cbar_position3=[0.71, 0.11, 0.255, 0.01]
 
-
+#For adjusting colorbars in annotator
+cbar_position1_annot=[0.32, 0.125, 0.01, 0.755]
+cbar_position2_annot=[0.645, 0.125, 0.01, 0.755]
+cbar_position3_annot=[0.965, 0.125, 0.01, 0.755]
 
 
 
