@@ -61,10 +61,10 @@ if '../' not in sys.path:
 from tools.misc.Utils import CenterSampling, ClusterAnalysis
 from tools.misc.patches2d import Patches2D
 import tools.neural_nets.xrf_autoencoders
-from tools.neural_nets.xrf_autoencoders import plot_3Dprojection
+from tools.neural_nets.xrf_autoencoders import *
 
-
-
+# To plot bounding box Warning name!
+from matplotlib import patches
 
 
 

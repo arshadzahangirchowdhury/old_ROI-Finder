@@ -32,8 +32,11 @@ import pdb
 sys.path.append('/data02/AZC/AI-XRF/roi_finder')
 
 
-from Utils import CenterSampling, ClusterAnalysis
-from patches2d import Patches2D
+from tools.misc.Utils import CenterSampling, ClusterAnalysis
+from tools.misc.patches2d import Patches2D
+
+# from Utils import CenterSampling, ClusterAnalysis
+# from patches2d import Patches2D
 
 
 

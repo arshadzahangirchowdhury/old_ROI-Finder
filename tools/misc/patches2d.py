@@ -46,6 +46,9 @@ class Patches2D():
 
         if initialize_by == "file":
             self._load_from_disk(**kwargs)
+            # cast to integer dtype
+            self.points = self.points.astype(np.uint32)
+            self.widths = self.widths.astype(np.uint32)
             return
         else:
             self.points, self.widths, self.check_valid = initializers[initialize_by](**kwargs)
@@ -70,13 +73,9 @@ class Patches2D():
         return
     
     # use this when initialize_by = "file"
-    def _load_from_disk(self, fpath = None):
+    def _load_from_disk(self, img_shape=None, fpath = None):
         
-        with h5py.File(fpath, 'r') as hf:
-            img_shape = tuple(np.asarray(hf["img_shape"]))
-            if np.any(img_shape != self.img_shape):
-                raise ValueError("image shape of patches requested does not match the attribute read from the file")
-                
+        with h5py.File(fpath, 'r') as hf:    
             self.points = np.asarray(hf["points"])
             self.widths = np.asarray(hf["widths"])
             if "features" in hf:
@@ -89,6 +88,8 @@ class Patches2D():
                 self.feature_names = [name.decode('UTF-8') for name in out_list]
             else:
                 self.feature_names = []
+        
+
 
     
     def add_features(self, features, names = []):
