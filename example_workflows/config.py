@@ -67,6 +67,10 @@ from tools.neural_nets.xrf_autoencoders import *
 from matplotlib import patches
 
 
+from openTSNE import TSNE
+
+
+
 
 
 #PATH DEFINITIONS
