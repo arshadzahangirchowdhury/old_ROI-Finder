@@ -31,3 +31,7 @@ __pycache__/
 
 # data
 *.h5
+
+# files
+Patches_tutorial.ipynb
+patches2d_temp.py

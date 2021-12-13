@@ -59,7 +59,7 @@ if '../' not in sys.path:
     sys.path.append('../')
 
 from tools.misc.Utils import CenterSampling, ClusterAnalysis
-from tools.misc.patches2d import Patches2D
+from tools.misc.patches2d import Patches as Patches2D
 import tools.neural_nets.xrf_autoencoders
 from tools.neural_nets.xrf_autoencoders import *
 
@@ -68,6 +68,7 @@ from matplotlib import patches
 
 
 from openTSNE import TSNE
+from sklearn.decomposition import PCA
 
 
 

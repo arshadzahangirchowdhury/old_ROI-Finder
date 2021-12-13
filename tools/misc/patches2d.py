@@ -13,33 +13,36 @@ import numpy as np
 
 
 import h5py
+import cupy as cp
+
 from multiprocessing import Pool, cpu_count
 import functools
+import time
 
 from numpy.random import default_rng
-import h5py
 import abc
+import tensorflow as tf
+from tensorflow.keras.layers import UpSampling3D
 
 
-class Patches2D():
+class Patches(dict):
     
-    def __init__(self, img_shape, initialize_by = "data", \
+    def __init__(self, vol_shape, initialize_by = "data", \
                  features = None, names = [], **kwargs):
         '''
-        A patch is the set of all pixels in a rectangle sampled from a big image. The Patches2D data structure allows the following. Think of this as a pandas DataFrame. Each row stores coordinates and features corresponding to a new patch constrained within a big image of shape img_shape.  
+        A patch is the set of all pixels in a rectangle / cuboid sampled from a (big) image / volume. The Patches data structure allows the following. Think of this as a pandas DataFrame. Each row stores coordinates and features corresponding to a new patch constrained within a big volume of shape vol_shape.  
         
-        1. stores coordinates and widths of the patches as arrays of shape (n_pts, y, x,) and (n_pts, py, px) respectively.
-        2. extracts patches from a big image and reconstructs a big image from patches
+        1. stores coordinates and widths of the patches as arrays of shape (n_pts, z, y, x,) and (n_pts, pz, py, px) respectively.
+        2. extracts patches from a big volume and reconstructs a big volume from patches
         3. stores feature vectors evaluated on the patches as an array of shape (n_pts, n_features)
-        4. filters, sorts and selects patches based on a feature or features  
-        
-        Pa
+        4. filters, sorts and selects patches based on a feature or features        
         '''
         
-        self.img_shape = img_shape
-        
+        self.vol_shape = vol_shape
         initializers = {"data" : self._check_data, \
+                        "slices" : self._from_slices,\
                         "grid" : self._set_grid, \
+                        "regular-grid" : self._set_regular_grid, \
                         "multiple-grids" : self._set_multiple_grids, \
                         "random-fixed-width" : self._get_random_fixed_width, \
                         "random" : self._get_random}
@@ -49,9 +52,19 @@ class Patches2D():
             # cast to integer dtype
             self.points = self.points.astype(np.uint32)
             self.widths = self.widths.astype(np.uint32)
+            self['points'] = self.points
+            self['widths'] = self.widths
             return
         else:
             self.points, self.widths, self.check_valid = initializers[initialize_by](**kwargs)
+            
+            # cast to integer dtype
+            self.points = self.points.astype(np.uint32)
+            self.widths = self.widths.astype(np.uint32)
+            self['points'] = self.points
+            self['widths'] = self.widths
+
+            
             self._check_valid_points()
             # append features if passed
             self.features = None
@@ -59,23 +72,27 @@ class Patches2D():
             self.add_features(features, names)
             return
 
+    def __len__(self):
+        return len(self.points)
+    
     def dump(self, fpath):
         # create df from points, widths, features
         
         with h5py.File(fpath, 'w') as hf:
-            hf.create_dataset("img_shape", data = self.img_shape)
+            hf.create_dataset("vol_shape", data = self.vol_shape)
             hf.create_dataset("points", data = self.points)
             hf.create_dataset("widths", data = self.widths)
             if self.features is not None:
                 hf.create_dataset("features", data = self.features)
-            if len(self.feature_names) > 0:
+            if any(self.feature_names):
                 hf.create_dataset("feature_names", data = np.asarray(self.feature_names, dtype = 'S'))
         return
     
     # use this when initialize_by = "file"
-    def _load_from_disk(self, img_shape=None, fpath = None):
+    def _load_from_disk(self, fpath = None):
         
-        with h5py.File(fpath, 'r') as hf:    
+        with h5py.File(fpath, 'r') as hf:
+            self.vol_shape = tuple(np.asarray(hf["vol_shape"]))
             self.points = np.asarray(hf["points"])
             self.widths = np.asarray(hf["widths"])
             if "features" in hf:
@@ -88,9 +105,6 @@ class Patches2D():
                 self.feature_names = [name.decode('UTF-8') for name in out_list]
             else:
                 self.feature_names = []
-        
-
-
     
     def add_features(self, features, names = []):
         '''
@@ -102,15 +116,19 @@ class Patches2D():
             array of features, must be same length and as corresponding patch coordinates.  
         '''
 
-
         if features is None:
             return
         
         # handle feature array here
+
+        
+
+        if features.ndim == 1: # check shape
+            features = features.reshape(-1,1)
+        
         if len(self.points) != len(features): # check length
             raise ValueError("numbers of anchor points and corresponding features must match")
-            
-        if features.ndim != 1: # check shape
+        if features.ndim != 2: # check shape
             raise ValueError("shape of features array not valid")
         else:
             npts, nfe = features.shape
@@ -120,14 +138,17 @@ class Patches2D():
         else:
             self.features = features
             
-        # handle feature names here
-        cond1 = len(self.feature_names) != 0
-        cond2 = len(names) != features.shape[-1]
-        if cond1 and cond2:
-            raise ValueError("feature array and corresponding names input are not compatible")
+        if not any(names):
+            names = ["Unnamed_f%i"%i for i in range(features.shape[-1])]
         else:
-            self.feature_names += names
-        
+            assert len(names) == features.shape[-1], "names of features must match array shape"
+            
+        self.feature_names += names
+
+        # set attributes so that Patches() is callable by feature name
+        for ii, key in enumerate(self.feature_names):
+            self[key] = self.features[:,ii]
+            
         return
     
     def append(self, more_patches):
@@ -146,8 +167,8 @@ class Patches2D():
             Append in place so nothing is returned.  
         '''
         
-        if self.img_shape != more_patches.img_shape:
-            raise ValueError("patches data is not compatible. Ensure that big image shapes match")
+        if self.vol_shape != more_patches.vol_shape:
+            raise ValueError("patches data is not compatible. Ensure that big volume shapes match")
             
         self.points = np.concatenate([self.points, more_patches.points], axis = 0)
         self.widths = np.concatenate([self.widths, more_patches.widths], axis = 0)
@@ -176,6 +197,22 @@ class Patches2D():
         widths = np.asarray(widths)
             
         return points, widths, check_valid
+
+    def _from_slices(self, s = None, check_valid = None):
+        
+        plen = len(s)
+        _ndim = len(s[0])
+        
+        points = np.empty((plen, 3))
+        widths = np.empty((plen, 3))
+        for ii in range(plen):
+            points[ii,...] = np.asarray([s[ii][ia].start for ia in range(_ndim)])
+            widths[ii,...] = np.asarray([s[ii][ia].stop - s[ii][ia].start for ia in range(_ndim)])
+            
+        points = np.asarray(points).astype(int)
+        widths = np.asarray(widths).astype(int)
+            
+        return points, widths, check_valid
     
     def _check_stride(self, patch_size, stride):
         
@@ -184,18 +221,17 @@ class Patches2D():
         This is calculated as the largest multiple of the original patch size that can fit along the respective axis.  
         '''
         
-        # TO-DO: Increasing stride size also increase overlap. At maximum stride, the overlap is nearly the width of the patch, which is weird. Handle this. Perhaps show a warning.  
+        # to-do: When using "grid", increasing stride size also increase overlap. At maximum stride, the overlap is nearly the width of the patch, which is weird. Handle this. Perhaps show a warning.  
         
+        _ndims = len(self.vol_shape)
         if stride is None: return patch_size
         
-        max_possible_stride = min([self.img_shape[ii]//patch_size[ii] for ii in range(len(self.img_shape))])
+        max_possible_stride = min([self.vol_shape[ii]//patch_size[ii] for ii in range(_ndims)])
         if stride > max_possible_stride:
-            raise ValueError("Cannot preserve aspect ratio with given value of zoom_out. Pick lower value.")
+            raise ValueError("Cannot preserve aspect ratio with given combination of patch_size and stride. Try lower values.")
 
-            
-        return tuple([patch_size[ii]*stride for ii in range(len(self.img_shape))])
+        return tuple([patch_size[ii]*stride for ii in range(_ndims)])
         
-
     def _set_multiple_grids(self, min_patch_size = None, \
                           max_stride = None, n_points = None):
         '''
@@ -214,6 +250,7 @@ class Patches2D():
         widths = np.concatenate(widths, axis = 0)
             
         if n_points is not None:
+            n_points = min(n_points, len(points))
             # sample randomly
             rng = default_rng()
             idxs = rng.choice(points.shape[0], n_points, replace = False)
@@ -222,62 +259,126 @@ class Patches2D():
         
         return np.asarray(points), np.asarray(widths), False
                           
-    def _set_grid(self, patch_size = None, stride = None):
+    def _set_grid(self, patch_size = None, stride = 1, n_points = None):
 
         '''
-        Initialize (n,2) points on the corner of image patches placed on a grid. Some overlap is introduced to prevent edge effects while stitching.  
+        Initialize (n,3) points on the corner of volume patches placed on a grid. Some overlap is introduced to cover the full volume.  
         
         Parameters  
         ----------  
         patch_size : tuple  
-            A tuple of widths (or the smallest possible values thereof) of the patch image  
+            A tuple of widths (or the smallest possible values thereof) of the patch volume  
             
         stride : int  
             Effectively multiplies the patch size by factor of stride.    
         
         '''
-        
         patch_size = self._check_stride(patch_size, stride)
-#         import pdb; pdb.set_trace()
-        
         # Find optimum number of patches to cover full image
-        my, mx = self.img_shape
-        py, px = patch_size
-        nx, ny = int(np.ceil(mx/px)), int(np.ceil(my/py))
-        stepx = (mx-px) // (nx-1) if mx != px else 0
-        stepy = (my-py) // (ny-1) if my != py else 0
+        # this was rewritten to accommodate both 2D and 3D patches.
+        # old code commented out below
+        m = list(self.vol_shape)
+        p = list(patch_size)
         
-        stepsize  = (stepy, stepx)
-        nsteps = (ny, nx)
+        nsteps = [int(np.ceil(m[i]/p[i])) for i in range(len(m))]
         
-        points = []
-        for ii in range(nsteps[0]):
-            for jj in range(nsteps[1]):
-                points.append([ii*stepsize[0], jj*stepsize[1]])
+        stepsize = []
+        for i in range(len(nsteps)):
+            _s = (m[i]-p[i]) // (nsteps[i]-1) if m[i] != p[i] else 0
+            stepsize.append(_s)
+
+        points = []            
+        if len(nsteps) == 3:
+            for ii in range(nsteps[0]):
+                for jj in range(nsteps[1]):
+                    for kk in range(nsteps[2]):
+                        points.append([ii*stepsize[0], jj*stepsize[1], kk*stepsize[2]])
+        elif len(nsteps) == 2:
+            for ii in range(nsteps[0]):
+                for jj in range(nsteps[1]):
+                    points.append([ii*stepsize[0], jj*stepsize[1]])
+        
         widths = [list(patch_size)]*len(points)
         
+        
+        if n_points is not None:
+            n_points = min(n_points, len(points))
+            points = np.asarray(points)
+            widths = np.asarray(widths)
+            # sample randomly
+            rng = default_rng()
+            idxs = rng.choice(points.shape[0], n_points, replace = False)
+            points = points[idxs,...].copy()
+            widths = widths[idxs,...].copy()
+        
         return np.asarray(points), np.asarray(widths), False
+            
+    def _set_regular_grid(self, patch_size = None, n_points = None):
 
-    def _get_random_fixed_width(self, patch_size = None, n_points = None, stride = None):
+        '''
+        Initialize (n,3) points on the corner of volume patches placed on a grid. No overlap is used. Instead, the volume is cropped such that it is divisible by the patch_size in that dimension.  
+        
+        Parameters  
+        ----------  
+        patch_size : tuple  
+            A tuple of widths (or the smallest possible values thereof) of the patch volume  
+        
+        '''
+        
+        patch_size = self._check_stride(patch_size, 1)
+
+        
+        # Find optimum number of patches to cover full image
+        m = list(self.vol_shape)
+        p = list(patch_size)
+        
+        nsteps = [int(m[i]//p[i]) for i in range(len(m))]
+        stepsize = patch_size
+        
+        points = []
+        if len(m) == 3:
+            for ii in range(nsteps[0]):
+                for jj in range(nsteps[1]):
+                    for kk in range(nsteps[2]):
+                        points.append([ii*stepsize[0], jj*stepsize[1], kk*stepsize[2]])
+        elif len(m) == 2:
+            for ii in range(nsteps[0]):
+                for jj in range(nsteps[1]):
+                    points.append([ii*stepsize[0], jj*stepsize[1]])
+        
+        widths = [list(patch_size)]*len(points)
+        
+        if n_points is not None:
+            n_points = min(n_points, len(points))
+            points = np.asarray(points)
+            widths = np.asarray(widths)
+            # sample randomly
+            rng = default_rng()
+            idxs = rng.choice(points.shape[0], n_points, replace = False)
+            points = points[idxs,...].copy()
+            widths = widths[idxs,...].copy()
+        
+        return np.asarray(points), np.asarray(widths), False
+    
+    
+    def _get_random_fixed_width(self, patch_size = None, n_points = None):
         """
         Generator that yields randomly sampled data pairs of number = batch_size.
 
         Parameters:
         ----------
         patch_size: tuple  
-            size of the 3D patch as input image  
+            size of the 3D patch as input volume  
             
-        stride : int  
-            (optional) width is defined as stride value multiplied by min_patch_size. Default is None (or = 1)    
-
         n_points: int
             size of the batch (number of patches to be extracted per batch)
 
         """
-        patch_size = self._check_stride(patch_size, stride)
+        _ndim = len(self.vol_shape)
+        patch_size = self._check_stride(patch_size, 1)
         
-        points = np.asarray([np.random.randint(0, self.img_shape[ii] - patch_size[ii], n_points) \
-                           for ii in range(len(self.img_shape))]).T
+        points = np.asarray([np.random.randint(0, self.vol_shape[ii] - patch_size[ii], n_points) \
+                           for ii in range(_ndim)]).T
         widths = np.asarray([list(patch_size)]*n_points)
         return np.asarray(points), np.asarray(widths), False
     
@@ -288,7 +389,7 @@ class Patches2D():
         Parameters:
         ----------
         min_patch_size: tuple
-            size of the 3D patch as input image
+            size of the 3D patch as input volume
 
         max_stride : int  
             width is defined as stride value multiplied by min_patch_size.    
@@ -297,13 +398,14 @@ class Patches2D():
             size of the batch (number of patches to be extracted per batch)  
 
         """
+        _ndim = len(self.vol_shape)
         _ = self._check_stride(min_patch_size, max_stride) # check max stride before going into the loop
         random_strides = np.random.randint(1, max_stride, n_points)
         points = []
         widths = []
         for stride in random_strides:
             curr_patch_size = self._check_stride(min_patch_size, stride)
-            points.append([np.random.randint(0, self.img_shape[ii] - curr_patch_size[ii]) for ii in range(3)])    
+            points.append([np.random.randint(0, self.vol_shape[ii] - curr_patch_size[ii]) for ii in range(_ndim)])    
             widths.append(list(curr_patch_size))
 
         points = np.asarray(points)
@@ -317,7 +419,7 @@ class Patches2D():
         for ii in range(len(self.points)):
             for ic in range(self.points.shape[-1]):
                 cond1 = self.points[ii,ic] < 0
-                cond2 = self.points[ii,ic] + self.widths[ii,ic] > self.img_shape[ic]
+                cond2 = self.points[ii,ic] + self.widths[ii,ic] > self.vol_shape[ic]
                 if any([cond1, cond2]):
                     print("Patch %i, %s, %s is invalid"%(ii, str(self.points[ii]), str(self.widths[ii])))
                     is_valid = False
@@ -329,7 +431,8 @@ class Patches2D():
     def _points_to_slices(self, a, w, b):
         
         # b is binning, a is the array of start values and w = stop - start (width)
-        return [[slice(a[ii,jj], a[ii,jj] + w[ii,jj], b[ii]) for jj in range(len(self.img_shape))] for ii in range(len(a))]
+        _ndim = len(self.vol_shape)
+        return [[slice(a[ii,jj], a[ii,jj] + w[ii,jj], b[ii]) for jj in range(_ndim)] for ii in range(len(a))]
     
     def slices(self, binning = None):
         '''  
@@ -337,7 +440,7 @@ class Patches2D():
         
         Returns  
         -------  
-        np.ndarray (n_pts, 2)    
+        np.ndarray (n_pts, 3)    
             each element of the array is a slice object  
         
         '''  
@@ -352,16 +455,16 @@ class Patches2D():
     
     def centers(self):
         '''  
-        Get centers of the patch images.    
+        Get centers of the patch volumes.    
         
         Returns  
         -------  
-        np.ndarray (n_pts, 2)    
-            each element of the array is the y, x coordinate of the center of the patch image.    
+        np.ndarray (n_pts, 3)    
+            each element of the array is the z, y, x coordinate of the center of the patch volume.    
         
         '''  
-        
-        s = [[int(self.points[ii,jj] + self.widths[ii,jj]//2) for jj in range(len(self.img_shape))] for ii in range(len(self.points))]
+        _ndim = len(self.vol_shape)
+        s = [[int(self.points[ii,jj] + self.widths[ii,jj]//2) for jj in range(_ndim)] for ii in range(len(self.points))]
         return np.asarray(s)
     
     def features_to_numpy(self, names):
@@ -372,11 +475,37 @@ class Patches2D():
         
         '''
         
-        if self.feature_names is None: raise ValueError("feature names must be defined first.")
+        if not any(self.feature_names): raise ValueError("feature names must be defined first.")
         out_list = []
         for name in names:
             out_list.append(self.features[:,self.feature_names.index(name)])
         return np.asarray(out_list).T
+    
+    def _is_within_cylindrical_crop(self, mask_ratio, height_ratio):
+        
+        '''
+        returns a boolean array
+        '''
+        assert self.vol_shape[1] == self.vol_shape[2], "must be tomographic CT volume (ny = nx = n)"
+        nz, n = self.vol_shape[:2]
+        centers = self.centers()
+        radii = np.sqrt(np.power(centers[:,1] - n/2.0, 2) + np.power(centers[:,2] - n/2.0, 2))
+        clist1 = radii < mask_ratio*n/2.0
+        
+        heights = np.abs(centers[:,0] - nz/2.0)
+        clist2 = heights < height_ratio*nz/2.0
+
+        cond_list = clist1&clist2
+#         print("CALL TO: %s"%self._is_within_cylindrical_crop.__name__)
+        return cond_list
+        
+    def filter_by_cylindrical_mask(self, mask_ratio = 0.9, height_ratio = 1.0):
+        '''
+        Selects patches whose centers lie inside a cylindrical volume of radius = mask_ratio*nx/2. This assumes that the volume shape is a tomogram where ny = nx. The patches are filtered along the vertical (or z) axis if height_ratio < 1.0.  
+        '''
+        
+        cond_list = self._is_within_cylindrical_crop(mask_ratio, height_ratio)
+        return self.filter_by_condition(cond_list)
     
     def filter_by_condition(self, cond_list):
         '''  
@@ -396,11 +525,88 @@ class Patches2D():
         elif cond_list.ndim > 2:
             raise ValueError("condition list must have 1 or 2 dimensions like so (n_pts,) or (n_pts, n_conditions)")
             
-        return Patches(self.img_shape, initialize_by = "data", \
+        return Patches(self.vol_shape, initialize_by = "data", \
                        points = np.compress(cond_list, self.points, axis = 0),\
                        widths = np.compress(cond_list, self.widths, axis = 0),\
-                       features = np.compress(cond_list, self.features, axis = 0), \
-                       names = self.feature_names)
+                       features = None if self.features is None else np.compress(cond_list, self.features, axis = 0), \
+                       names = self.feature_names if any(self.feature_names) else [])
+    
+    def copy(self):
+        
+        _fcopy = None if self.features is None else self.features.copy()
+        _names = self.feature_names.copy() if any(self.feature_names) else []
+        
+        return Patches(self.vol_shape, initialize_by = "data", \
+                       points = self.points.copy(),\
+                       widths = self.widths.copy(),\
+                       features = _fcopy, \
+                       names = _names)
+        
+
+    def select_by_range(self, s_sel):
+
+        '''
+        Parameters
+        ----------
+        s_sel : tuple
+            range (start, stop)
+        
+        '''
+        s_sel = slice(s_sel[0], s_sel[1], None)
+            
+        return Patches(self.vol_shape, initialize_by = "data", \
+                       points = self.points.copy()[s_sel,...],\
+                       widths = self.widths.copy()[s_sel,...],\
+                       features = None if self.features is None else self.features.copy()[s_sel,...], \
+                       names = self.feature_names.copy() if any(self.feature_names) else [])
+        
+    def pop(self, n_pop):
+        
+        '''
+        Parameters
+        ----------
+        n_pop : int
+            If n_pop is negative, pop from end else pop from beginning
+        
+        '''
+        if n_pop > 0:
+            spop = slice(n_pop, None, None)
+        elif n_pop < 0:
+            spop = slice(None, n_pop, None)
+        else:
+            return self.copy()
+            
+        return Patches(self.vol_shape, initialize_by = "data", \
+                       points = self.points.copy()[spop,...],\
+                       widths = self.widths.copy()[spop,...],\
+                       features = None if self.features is None else self.features.copy()[spop,...], \
+                       names = self.feature_names.copy() if any(self.feature_names) else [])
+        
+        
+    def rescale(self, fac, new_vol_shape):
+        '''
+        '''
+        
+        _fcopy = None if self.features is None else self.features.copy()
+        _names = self.feature_names.copy() if any(self.feature_names) else []
+        
+        fac = int(fac)
+        px_max = np.max(self.points, axis = 0)*fac
+        extra_pix = np.asarray(new_vol_shape) - px_max
+        
+#         cond0 = extra_pix < 0
+#         cond1 = extra_pix > 1
+#         cond_fin = cond0 | cond1
+        cond_fin = extra_pix < 0
+        
+        if np.any(cond_fin):
+            raise ValueError("new volume shape is inappropriate")
+        else:
+            return Patches(new_vol_shape, initialize_by = "data", \
+                           points = self.points.copy()*fac,\
+                           widths = self.widths.copy()*fac,\
+                           features = _fcopy, \
+                           names = _names)
     
     def select_by_indices(self, idxs):
 
@@ -412,11 +618,11 @@ class Patches2D():
             list of integers as indices.  
         '''
         
-        return Patches(self.img_shape, initialize_by = "data", \
-                       points = self.points[idxs],\
-                       widths = self.widths[idxs],\
-                       features = self.features[idxs], \
-                       names = self.feature_names)
+        return Patches(self.vol_shape, initialize_by = "data", \
+                       points = self.points[idxs].copy(),\
+                       widths = self.widths[idxs].copy(),\
+                       features = None if self.features is None else self.features[idxs].copy(), \
+                       names =  self.feature_names if any(self.feature_names) else [])
         
     def select_random_sample(self, n_points):
         
@@ -454,11 +660,9 @@ class Patches2D():
         idxs = np.argsort(feature)
         
         return self.select_by_indices(idxs)
-
     
     def select_by_plane(self, plane_axis, plane_idx):
         '''
-        CHECK iF IT WORKS (in 2d select by line)
         Select all patches that include a given plane as defined by plane_axis (0, 1 or 2) and plane_idx (index along axis dimension).  
         
         Parameters
@@ -510,6 +714,7 @@ class Patches2D():
         
     def _calc_binning(self, patch_size):        
         bin_vals = self.widths//np.asarray(patch_size)
+        
         cond1 = np.sum(np.max(bin_vals, axis = 1) != np.min(bin_vals, axis = 1)) > 0
         cond2 = np.any(bin_vals == 0)
         cond3 = np.any(self.widths%np.asarray(patch_size))
@@ -518,15 +723,13 @@ class Patches2D():
             raise ValueError("aspect ratios of some patches don't match!! Cannot bin to patch_size")
         if cond2: # avoid the need to upsample patches, can use a smaller model instead
             raise ValueError("patch_size cannot be larger than any given patch in the list")
-        if cond3: # constraint for ensuring stitch() works
-            raise ValueError("stitch only works when binning values are even numbers")
-
+        
         return bin_vals[:,0]
     
-    def extract(self, img, patch_size):
+    def extract(self, vol, patch_size):
 
         '''  
-        Returns a list of image patches at the active list of coordinates by drawing from the given big image 'vol'  
+        Returns a list of volume patches at the active list of coordinates by drawing from the given big volume 'vol'  
         
         Returns
         -------
@@ -534,43 +737,135 @@ class Patches2D():
             shape is (n_pts, patch_z, patch_y, patch_x)  
         
         '''  
-        if img.shape != self.img_shape:
-            raise ValueError("Shape of big image does not match img_shape attribute of patches data")
-
-        # calculate binning
-        bin_vals = self._calc_binning(patch_size)
-        # make a list of slices
-        s = self.slices(binning = bin_vals)
+        xp = cp.get_array_module(vol)
+        
+        _ndim = len(self.vol_shape)
+        assert vol.shape == self.vol_shape, "Shape of big volume does not match vol_shape attribute of patches data"
+        
+        if patch_size is not None:
+            # calculate binning
+            bin_vals = self._calc_binning(patch_size)
+            # make a list of slices
+            s = self.slices(binning = bin_vals)
+        else:
+            s = self.slices()
+        
         # make a list of patches
-        sub_imgs = [np.asarray(img[s[ii,0], s[ii,1]]) for ii in range(len(self.points))]
+        if _ndim == 3:
+            sub_vols = [xp.asarray(vol[s[ii,0], s[ii,1], s[ii,2]]) for ii in range(len(self.points))]
+        elif _ndim == 2:
+            sub_vols = [xp.asarray(vol[s[ii,0], s[ii,1]]) for ii in range(len(self.points))]
         
-        return np.asarray(sub_imgs, dtype = img.dtype)
+        if patch_size is None:
+            return sub_vols
+        else:
+            return xp.asarray(sub_vols, dtype = vol.dtype)
     
-    def stitch(self, sub_imgs, patch_size):
-        '''  
-        Stitches the big image from a list of image patches (with upsampling).    
+    
+    def fill_patches_in_volume(self, sub_vols, vol_out, TIMEIT = False):
         
-        Returns
-        -------
-        np.ndarray  
-            shape is (n_pts, patch_z, patch_y, patch_x)  
+        '''
+        to-do: Test cases: a volume full of ones may be assigned a list of sub_vols of zeroes 
+        then extract patches back from the vol, and assert equal to sub_vols from before
+        '''
         
-        '''  
+        t0 = time.time()
         
-        if sub_imgs.shape[0] != len(self.points):
-            raise ValueError("number of patch points and length of input list of patches must match")
-        img = np.zeros(self.img_shape, dtype = sub_imgs.dtype)
+        # to-do: check if these assertions slow things down?
+        assert len(self) == len(sub_vols), "number of sub-volumes do not match the number of items in patches"
         
-        # calculate binning
-        raise NotImplementedError('This function is not implmemented yet')
-        return img
+        assert self.vol_shape == vol_out.shape, "shape of volume enclosing the patches does not match that of the output volume"
+        for ii in range(len(self)):
+            assert tuple(self.widths[ii,...]) == tuple(sub_vols[ii].shape), "width mismatch between sub_vol and patch at ii = %i"%ii
+            assert sub_vols[ii].ndim == 3, "sub_vols must be a 4-D array or a list of volumes of some shape. (batch_size, nz, ny, nx)"        
+        s = self.slices()
+        for idx in range(len(self)):
+                vol_out[tuple(s[idx,...])] = sub_vols[idx]
+            
+        t1 = time.time()
+        t_tot = (t1-t0)*1000.0/len(self)
+        if TIMEIT:
+            print("TIME PER UNIT PATCH fill_patches_in_volume: %.2f ms"%t_tot)
+        return
+        
+        # should I return the volume?    
+        
+    
+    def plot_3D_feature(self, ife, ax, plot_type = 'centers'):
 
-    def _slice_shift(self, s, shift):
-        return slice(s.start + shift, s.stop + shift, s.step)
+        if len(self.vol_shape) != 3:
+            raise NotImplementedError("implemented only for 3D patches")
+        
+        if plot_type == 'centers':
+            ax.scatter(self.centers()[:,0], self.centers()[:,1], self.centers()[:,2], c = self.features[:,ife])
+        elif plot_type == 'corners':
+            ax.scatter(self.points[:,0], self.points[:,1], self.points[:,2], c = self.features[:,ife])
+
+        ax.set_xlim3d(0, self.vol_shape[0])
+        ax.set_ylim3d(0, self.vol_shape[1])
+        ax.set_zlim3d(0, self.vol_shape[2])  
+        if self.feature_names is not None:
+            ax.set_title(self.feature_names[ife], fontsize = 16)
+        return    
     
-    
-   
-    
+    def upsample_patches(self, sub_vols, upsampling_fac):
+        raise NotImplementedError("not ")
+        assert sub_vols.ndim == 4, "sub_vols array must have shape (batch_size, width_z, width_y, width_x) and ndim == 4 (no channel axis)"
+
+        # can we use some cupy function here? to-do.
+        sub_vols = UpSampling3D(upsampling_fac)(sub_vols)
+        return sub_vols, self.rescale(upsampling_fac, new_vol_shape = new_vol_shape)
+
+        
+        
+#     ######## CONSIDERING REMOVING THE CODE BELOW ###############
+#     def stitch(self, sub_vols, patch_size, upsample = False):
+#         '''  
+#         Stitches the big volume from a list of volume patches (with upsampling).    
+        
+#         Returns
+#         -------
+#         np.ndarray  
+#             shape is (n_pts, patch_z, patch_y, patch_x)  
+        
+#         '''  
+#         _ndim = len(self.vol_shape)
+#         if sub_vols.shape[0] != len(self.points):
+#             raise ValueError("number of patch points and length of input list of patches must match")
+#         vol = np.zeros(self.vol_shape, dtype = sub_vols.dtype)
+        
+#         # calculate binning
+#         bin_vals = self._calc_binning(patch_size)
+#         # make a list of slices
+#         s = self.slices()
+        
+#         if _ndim == 3:
+#             # set gpu for upsampling
+#             gpus = tf.config.experimental.list_physical_devices('GPU')
+#             if gpus:
+#                 try:
+#                     mem_limit = 4*np.prod(patch_size)*np.max(bin_vals)**3*1.5/1.0e6
+#                     tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=mem_limit)])
+#                 except RuntimeError as e:
+#                     print(e)        
+            
+#             for ii in range(len(self.points)):
+#                 vol_out = sub_vols[ii].copy()[np.newaxis,...,np.newaxis]
+#                 vol_out = UpSampling3D(size = tuple([bin_vals[ii]]*3))(vol_out)
+#                 vol_out = vol_out[0,...,0]
+#                 vol[s[ii,0],s[ii,1],s[ii,2]] = vol_out
+
+#         elif _ndim == 2:
+#             for ii in range(len(self.points)):
+#                 vol_out = sub_vols[ii].copy()[np.newaxis,...,np.newaxis]
+#                 vol_out = cv2.resize(vol_out, (patch_size[1], patch_size[0]))
+#                 vol_out = vol_out[0,...,0]
+#                 vol[s[ii,0],s[ii,1]] = vol_out
+            
+#         return vol
+
+        
+        
 if __name__ == "__main__":
     
     print('just a bunch of functions')

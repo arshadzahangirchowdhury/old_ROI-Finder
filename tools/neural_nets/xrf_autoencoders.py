@@ -33,7 +33,8 @@ sys.path.append('/data02/AZC/AI-XRF/roi_finder')
 
 
 from tools.misc.Utils import CenterSampling, ClusterAnalysis
-from tools.misc.patches2d import Patches2D
+from tools.misc.patches2d import Patches as Patches2D
+
 
 # from Utils import CenterSampling, ClusterAnalysis
 # from patches2d import Patches2D
@@ -638,7 +639,7 @@ def autoencoder(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
     x = layers.Reshape((7, 7, 64))(x)
     x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
     x = layers.Conv2DTranspose(32, 3, activation="relu", strides=2, padding="same")(x)
-    decoder_outputs = layers.Conv2DTranspose(num_channels, 3, activation="relu", padding="same")(x)
+    decoder_outputs = layers.Conv2DTranspose(1, 3, activation="relu", padding="same")(x)
     decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
     if summary=='yes':
         decoder.summary()
@@ -697,16 +698,17 @@ class VAE(keras.Model):
 
     def train_step(self, data):
         with tf.GradientTape() as tape:
-            z_mean, z_log_var, z = self.encoder(data)
+            data_x, data_y = data
+            z_mean, z_log_var, z = self.encoder(data_x)
             reconstruction = self.decoder(z)
             
             if self.recon_type=='mse':
                 
-                reconstruction_loss = tf.reduce_mean(keras.losses.mean_squared_error(data, reconstruction))
+                reconstruction_loss = tf.reduce_mean(keras.losses.mean_squared_error(data_y, reconstruction))
                 
             elif self.recon_type=='bce':
                 
-                reconstruction_loss = tf.reduce_mean(keras.losses.binary_crossentropy(data, reconstruction))
+                reconstruction_loss = tf.reduce_mean(keras.losses.binary_crossentropy(data_y, reconstruction))
                 
             else:
                 raise ValueError("Reconstruction loss must be either 'mse' or 'bcel' " )
@@ -715,7 +717,7 @@ class VAE(keras.Model):
                 regularization_loss=tf.reduce_mean(tf.abs(z))
                 
             elif self.regularization_type=='kl':
-                regularization_loss = tf.reduce_mean(keras.losses.kl_divergence(data, reconstruction))
+                regularization_loss = tf.reduce_mean(keras.losses.kl_divergence(data_y, reconstruction))
                 
             else:
                 raise ValueError("Regularization loss must be either 'L1' or 'kl' " )
