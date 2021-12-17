@@ -648,6 +648,102 @@ def autoencoder(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
 
 
 
+class Short_VAE(keras.Model):
+    """Modifies the keras.Model to implement custom loss functions and train step
+    
+    
+    
+    Args:
+    -----
+    encoder: the encoder model.
+    
+    decoder: the decoder model.
+    
+    weight: stregnth of the regularization loss (L1 or KL).
+    
+    regularization_type:  Type of regularization of model loss.
+    -'kl': Kullback-Leibler divergence loss
+    -'L1': L1 loss.
+    
+    
+    
+    
+    """
+    def __init__(self, encoder, decoder,weight=1/250,regularization_type='kl',recon_type='bce', **kwargs):
+        super(Short_VAE, self).__init__(**kwargs)
+        self.encoder = encoder
+        self.decoder = decoder
+        self.weight=weight
+        self.regularization_type=regularization_type
+        self.recon_type=recon_type
+        self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
+        self.reconstruction_loss_tracker = keras.metrics.Mean(
+            name="reconstruction_loss"
+        )
+#         self.kl_loss_tracker = keras.metrics.Mean(name="kl_loss")
+#         self.beta_kl_loss_tracker = keras.metrics.Mean(name="beta_kl_loss")
+        self.regularization_loss_tracker = keras.metrics.Mean(name="regularization_loss")
+
+    @property
+    def metrics(self):
+        return [
+            self.total_loss_tracker,
+            self.reconstruction_loss_tracker,
+#             self.kl_loss_tracker,
+#             self.beta_kl_loss_tracker,
+            self.regularization_loss_tracker,
+        ]
+
+    def train_step(self, data):
+        with tf.GradientTape() as tape:
+            z_mean, z_log_var, z = self.encoder(data)
+            reconstruction = self.decoder(z)
+            
+            if self.recon_type=='mse':
+                
+                reconstruction_loss = tf.reduce_mean(keras.losses.mean_squared_error(data, reconstruction))
+                
+            elif self.recon_type=='bce':
+                
+                reconstruction_loss = tf.reduce_mean(keras.losses.binary_crossentropy(data, reconstruction))
+                
+            else:
+                raise ValueError("Reconstruction loss must be either 'mse' or 'bcel' " )
+            
+            if self.regularization_type=='L1':
+                regularization_loss=tf.reduce_mean(tf.abs(z))
+                
+            elif self.regularization_type=='kl':
+                regularization_loss = tf.reduce_mean(keras.losses.kl_divergence(data, reconstruction))
+                
+            else:
+                raise ValueError("Regularization loss must be either 'L1' or 'kl' " )
+#             weight=1/250
+
+
+            #Print the losses
+#             pdb.set_trace()
+            total_loss = reconstruction_loss + self.weight*regularization_loss
+
+        grads = tape.gradient(total_loss, self.trainable_weights)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+        self.total_loss_tracker.update_state(total_loss)
+        self.reconstruction_loss_tracker.update_state(reconstruction_loss)
+        self.regularization_loss_tracker.update_state(regularization_loss)
+
+
+
+
+
+
+        return {
+            "loss": self.total_loss_tracker.result(),
+            "reconstruction_loss": self.reconstruction_loss_tracker.result(),
+            "regularization_loss": self.regularization_loss_tracker.result()
+        }
+
+
+
 
 
 class VAE(keras.Model):
