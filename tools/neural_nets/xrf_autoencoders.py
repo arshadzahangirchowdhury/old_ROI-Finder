@@ -353,6 +353,41 @@ def noise_addition(data_format,noise_amplitude,x_train,x_test):
     
     return x_train_noisy,x_test_noisy
 
+def single_noise_addition(data_format,noise_amplitude,x_train):
+    '''
+    Adds random noise to training and testing datasets.
+
+    Args:
+    -----
+    data_format: The desired output format of the subimages in x_train
+      - 'grayscale': returns the grayscale values for the subimages
+      - 'binary': returns the binary values for the subimages
+    noise_amplitude: amplitude of the noise
+    x_train: training images
+    
+    
+    returns:
+    --------
+    Returns subimages in either binary or grayscale format with added random noise
+      
+      
+    '''
+    
+    x_train_noisy = x_train + noise_amplitude * np.random.normal(loc=0.0, scale=1.0, size=x_train.shape) 
+    
+    
+    if data_format=='grayscale':
+        x_train_noisy = np.clip(x_train_noisy, 0., 255.)
+        
+            
+    elif data_format=='binary':
+        x_train_noisy = np.clip(x_train_noisy, 0., 1.)
+        
+    
+    
+    return x_train_noisy
+
+
 
 def combine_data(x_train,x_test,y_train, y_test):  
     '''
@@ -495,7 +530,8 @@ def view_latent_variable_clusters(combined_data,combined_label,cell_types,encode
     df_z['CellType']=combined_label.astype(int)
     # df_z
     custom_palette = sns.color_palette("Paired", cell_types)
-    ax=sns.pairplot(df_z, hue='CellType',palette=custom_palette, corner=True, height=pairplot_height)
+    # ax=sns.pairplot(df_z, hue='CellType',palette=custom_palette, corner=True, height=pairplot_height)
+    ax=sns.pairplot(df_z, hue='CellType', corner=True, height=pairplot_height)
     
     if PCA_flag=='yes':
         from sklearn.decomposition import PCA
@@ -514,6 +550,15 @@ def view_latent_variable_clusters(combined_data,combined_label,cell_types,encode
             df=pd.DataFrame(columns=['$z_0$', '$z_1$','$z_2$', 'label'], data=np.concatenate([PCA_Outputs, combined_label.reshape(-1,1)], axis=1 ))
 
             plot_3Dprojection(df, figw = PCA_figwidth)
+
+            sns.pairplot(df, hue="label", corner=True, height=pairplot_height)
+            
+            sns.pairplot(df.loc[df['label'] == 0], hue="label",palette=['navy'] ,corner=True, height=pairplot_height*0.5)
+            sns.pairplot(df.loc[df['label'] == 1], hue="label",palette=['darkorange'] ,corner=True, height=pairplot_height*0.5)
+
+
+
+            
             
             
 
@@ -646,7 +691,105 @@ def autoencoder(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
     
     return encoder,decoder
 
+def autoencoder_3D(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
+    
+    '''
+    Defines the 3D autoencoder model.
+    
+    Args:
+    -----
+    latent_dim: Dimension of the latent vector.
+    
+    num_channels: number of channels
+    
+    BASE_PATCH_WIDTH: size of the subimage.
+    
+    summary: (optional) print model summary.
+      
+    
+    returns:
+    --------
+    Returns encoder and the decoder models.
+    
+    '''
+    
+    
+    #Architechture
 
+    encoder_inputs = keras.Input(shape=(BASE_PATCH_WIDTH, BASE_PATCH_WIDTH, num_channels))
+    x = layers.Conv2D(32, 3, activation="relu", strides=2, padding="same")(encoder_inputs)
+    x = layers.Conv2D(64, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Flatten()(x)
+    x = layers.Dense(16, activation="relu")(x)
+    z_mean = layers.Dense(latent_dim, name="z_mean")(x)
+    z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
+    z = Sampling()([z_mean, z_log_var])
+    encoder = keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
+    
+    if summary=='yes':
+        encoder.summary()
+
+    latent_inputs = keras.Input(shape=(latent_dim,))
+    x = layers.Dense(7 * 7 * 64, activation="relu")(latent_inputs)
+    x = layers.Reshape((7, 7, 64))(x)
+    x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Conv2DTranspose(32, 3, activation="relu", strides=2, padding="same")(x)
+    decoder_outputs = layers.Conv2DTranspose(num_channels, 3, activation="relu", padding="same")(x)
+    decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
+    if summary=='yes':
+        decoder.summary()
+    
+    return encoder,decoder
+
+def check_VAE_3D_output(combined_data,image_no,BASE_PATCH_WIDTH,encoder,decoder):
+    '''
+    Reads an image from the combinded dataset and compares against a 3D VAE prediction
+    
+    Args:
+    -----
+    combined_data: The image dataset
+      
+    image_no: index of the input image
+    
+    BASE_PATCH_WIDTH: index of the input image
+    
+    encoder: encoder model
+    
+    decoder: decoder model
+    
+    returns:
+    --------
+    Returns the plots of the input image and the image returned by the decoder.
+    
+    '''
+    
+    plt.figure(figsize=(8,8))
+    print("image no: ", image_no)
+    plt.subplot(231)
+    plt.title('Input image: Cu')
+    plt.imshow(combined_data.T[0].T[image_no]);
+    plt.subplot(232)
+    plt.title('Input image: Ca')
+    plt.imshow(combined_data.T[1].T[image_no]);
+    plt.subplot(233)
+    plt.title('Input image: K')
+    plt.imshow(combined_data.T[2].T[image_no]);
+
+    decoder_output=decoder.predict(encoder.predict(np.expand_dims(combined_data[image_no],0))[2])
+
+    plt.subplot(234)
+    plt.title('Output image: Cu')
+    plt.imshow(decoder_output.T[0].T[0]);
+    plt.subplot(235)
+    plt.title('Output image: Ca')
+    plt.imshow(decoder_output.T[1].T[0]);
+    plt.subplot(236)
+    plt.title('Output image: K')
+    plt.imshow(decoder_output.T[2].T[0]);
+
+
+    plt.tight_layout()
+        
 
 class Short_VAE(keras.Model):
     """Modifies the keras.Model to implement custom loss functions and train step
@@ -903,7 +1046,84 @@ def plot_latent_space(combined_data,weight, BASE_PATCH_WIDTH,regularization_type
     plt.ylabel("z[1]")
     plt.imshow(figure, cmap="Greys_r")
     plt.show()
+
+    
+def plot_RAE_latent_space(combined_data,weight, BASE_PATCH_WIDTH,regularization_type='kl',recon_type='bce', n=30, figsize=15):
+    
+    '''
+    
+    display a n*n 2D manifold of cell images
+    
+    Args:
+    -----
+    combined_data: The image dataset.
+    
+    weight: stregnth of the regularization loss (L1 or KL).
+    
+    BASE_PATCH_WIDTH: size of the subimage.
+    
+    n: (optional) grid size.
+    
+    figsize: (optional) size of the figure.
+      
+    
+    returns:
+    --------
+    Returns figure with a 2D manifold of cell images
+    
+    '''
+    
+    
+    encoder,decoder=autoencoder(2,1,BASE_PATCH_WIDTH,summary='no')
+    
+    
+    vae = Short_VAE(encoder, decoder,weight,regularization_type,recon_type)
+    vae.compile(optimizer='adam')
+    vae.fit(combined_data, epochs=100, batch_size=128,verbose=0)  
+    
+    scale = 1.0
+    figure = np.zeros((BASE_PATCH_WIDTH * n, BASE_PATCH_WIDTH * n))
+    # linearly spaced coordinates corresponding to the 2D plot
+    # of digit classes in the latent space
+    grid_x = np.linspace(-scale, scale, n)
+    grid_y = np.linspace(-scale, scale, n)[::-1]
+
+    for i, yi in enumerate(grid_y):
+        for j, xi in enumerate(grid_x):
+            z_sample = np.array([[xi, yi]])
+            x_decoded = vae.decoder.predict(z_sample)
+            digit = x_decoded[0].reshape(BASE_PATCH_WIDTH, BASE_PATCH_WIDTH)
+            figure[
+                i * BASE_PATCH_WIDTH : (i + 1) * BASE_PATCH_WIDTH,
+                j * BASE_PATCH_WIDTH : (j + 1) * BASE_PATCH_WIDTH,
+            ] = digit
+
+    plt.figure(figsize=(figsize, figsize))
+    start_range = BASE_PATCH_WIDTH // 2
+    end_range = n * BASE_PATCH_WIDTH + start_range
+    pixel_range = np.arange(start_range, end_range, BASE_PATCH_WIDTH)
+    sample_range_x = np.round(grid_x, 1)
+    sample_range_y = np.round(grid_y, 1)
+    plt.xticks(pixel_range, sample_range_x)
+    plt.yticks(pixel_range, sample_range_y)
+    plt.xlabel("z[0]")
+    plt.ylabel("z[1]")
+    plt.imshow(figure, cmap="Greys_r")
+    plt.show()
   
+
+
+
+
+
+
+
+
+
+    
+
+
+
 
 
 
