@@ -167,29 +167,43 @@ dependencies:
   - zstd=1.5.0=ha95c52a_0
   - pip:
     - absl-py==0.13.0
+    - aiohttp==3.8.1
+    - aiosignal==1.2.0
     - anyio==3.3.4
     - argon2-cffi==20.1.0
     - astunparse==1.6.3
     - async-generator==1.10
+    - async-timeout==4.0.1
+    - asynctest==0.13.0
+    - autobahn==21.11.1
+    - automat==20.2.0
     - babel==2.9.1
     - bleach==3.3.0
     - cachetools==4.2.2
+    - charset-normalizer==2.0.8
     - configargparse==1.5.1
+    - constantly==15.1.0
     - ct-segnet==1.225
+    - cupy-cuda111==10.0.0
     - debugpy==1.3.0
     - decorator==4.4.2
     - defusedxml==0.7.1
+    - deprecated==1.2.13
     - deprecation==2.1.0
     - entrypoints==0.3
+    - fastrlock==0.8
     - flatbuffers==1.12
+    - frozenlist==1.2.0
     - gast==0.4.0
     - google-auth==1.32.1
     - google-auth-oauthlib==0.4.4
     - google-pasta==0.2.0
     - grpcio==1.34.1
     - h5py==3.1.0
+    - hyperlink==21.0.0
     - imagestackpy==0.1
     - importlib-metadata==3.10.1
+    - incremental==21.3.0
     - ipyfilechooser==0.4.4
     - ipykernel==6.0.1
     - ipython==7.25.0
@@ -216,6 +230,7 @@ dependencies:
     - matplotlib-inline==0.1.2
     - matplotlib-scalebar==0.8.0
     - mistune==0.8.4
+    - multidict==5.2.0
     - nbclassic==0.3.4
     - nbclient==0.5.3
     - nbconvert==6.1.0
@@ -259,13 +274,23 @@ dependencies:
     - testpath==0.5.0
     - threadpoolctl==2.2.0
     - tomlkit==0.7.2
+    - tomo-encoders==0.3
+    - torch==1.10.0+cu113
+    - torchvision==0.11.1
     - tqdm==4.61.2
     - traitlets==5.0.5
+    - twisted==21.7.0
+    - txaio==21.2.1
     - typing-extensions==3.7.4.3
+    - vedo==2021.0.7
+    - vtk==9.0.3
     - webencodings==0.5.1
     - websocket-client==1.2.1
     - werkzeug==2.0.1
     - widgetsnbextension==3.5.1
     - wrapt==1.12.1
+    - wslink==1.1.1
+    - yarl==1.7.2
     - zipp==3.5.0
+    - zope-interface==5.4.0
 prefix: /home/otheruser/anaconda3/envs/tf2GPU
