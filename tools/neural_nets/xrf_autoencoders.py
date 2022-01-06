@@ -741,6 +741,60 @@ def autoencoder_3D(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
     
     return encoder,decoder
 
+
+def autoencoder_3D_deep(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
+    
+    '''
+    Defines the 3D autoencoder model with more convolutional layers.
+    
+    Args:
+    -----
+    latent_dim: Dimension of the latent vector.
+    
+    num_channels: number of channels
+    
+    BASE_PATCH_WIDTH: size of the subimage.
+    
+    summary: (optional) print model summary.
+      
+    
+    returns:
+    --------
+    Returns encoder and the decoder models.
+    
+    '''
+    
+    
+    #Architechture
+
+    encoder_inputs = keras.Input(shape=(BASE_PATCH_WIDTH, BASE_PATCH_WIDTH, num_channels))
+    x = layers.Conv2D(16, 3, activation="relu", strides=2, padding="same")(encoder_inputs)
+    x = layers.Conv2D(32, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Conv2D(64, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Flatten()(x)
+    x = layers.Dense(16, activation="relu")(x)
+    z_mean = layers.Dense(latent_dim, name="z_mean")(x)
+    z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
+    z = Sampling()([z_mean, z_log_var])
+    encoder = keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
+    
+    if summary=='yes':
+        encoder.summary()
+
+    latent_inputs = keras.Input(shape=(latent_dim,))
+    x = layers.Dense(7 * 7 * 64, activation="relu")(latent_inputs)
+    x = layers.Reshape((7, 7, 64))(x)
+    x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Conv2DTranspose(32, 3, activation="relu", strides=2, padding="same")(x)
+#     x = layers.Conv2DTranspose(16, 3, activation="relu", strides=2, padding="same")(x)
+    decoder_outputs = layers.Conv2DTranspose(num_channels, 3, activation="relu", padding="same")(x)
+    decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
+    if summary=='yes':
+        decoder.summary()
+    
+    return encoder,decoder
+
+
 def check_VAE_3D_output(combined_data,image_no,BASE_PATCH_WIDTH,encoder,decoder):
     '''
     Reads an image from the combinded dataset and compares against a 3D VAE prediction

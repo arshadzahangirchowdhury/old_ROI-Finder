@@ -9,6 +9,12 @@ __pycache__/
 # Distribution / packaging
 .Python
 
+# Freeze
+
+example_workflows/xrf_PCA.ipynb
+example_workflows/xrf_morphology.ipynb
+example_workflows/xrf_soft_kmeans.ipynb
+
 # Directories
 \raw_xrf_data
 \annotated_xrf_data
