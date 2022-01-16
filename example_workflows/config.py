@@ -96,6 +96,7 @@ CROSS_HAIR_SIZE=15
 SCALE_UNIT_FACTOR=0.000001
 
 FIGSIZE=(9, 2.8)
+SMALL_FIGSIZE=(8, 2.4)
 
 #For adjusting colorbars in segmenter
 cbar_position1=[0.055, 0.11, 0.255, 0.01]
