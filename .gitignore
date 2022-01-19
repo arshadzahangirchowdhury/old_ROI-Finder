@@ -14,11 +14,13 @@ __pycache__/
 example_workflows/xrf_PCA.ipynb
 example_workflows/xrf_soft_kmeans.ipynb
 example_workflows/xrf_old_segmenter.ipynb
+example_workflows/xrf_old_annotator.ipynb
 example_workflows/xrf_class_structure.ipynb
 
 # Directories
 \raw_xrf_data
-\annotated_xrf_data
+\annotated_XRF
+\annotated_xrf_data\
 \annotated_xrf_data\raw_cells\
 \annotated_xrf_data\reject\
 \annotated_xrf_data\accept\
