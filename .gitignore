@@ -13,6 +13,8 @@ __pycache__/
 
 example_workflows/xrf_PCA.ipynb
 example_workflows/xrf_soft_kmeans.ipynb
+example_workflows/xrf_old_segmenter.ipynb
+example_workflows/xrf_class_structure.ipynb
 
 # Directories
 \raw_xrf_data
