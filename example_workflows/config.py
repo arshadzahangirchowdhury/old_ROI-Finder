@@ -49,7 +49,7 @@ from scipy import ndimage
 from scipy.ndimage import label, generate_binary_structure,measurements,morphology 
 from scipy.ndimage import binary_erosion, binary_dilation
 from skimage import data
-from skimage.filters import threshold_otsu
+from skimage.filters import threshold_otsu, threshold_mean, threshold_local
 from skimage import measure
 
 
