@@ -7,6 +7,15 @@ Essential ROI-finder classes and functions
 
 import beamtime_config
 from beamtime_config import *
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from numpy import matlib
+from scipy.stats import norm
+import random
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from matplotlib import rc
 
 class XRF_image:
     
