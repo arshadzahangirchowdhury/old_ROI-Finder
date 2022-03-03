@@ -16,8 +16,10 @@ example_workflows/xrf_soft_kmeans.ipynb
 example_workflows/xrf_old_segmenter.ipynb
 example_workflows/xrf_old_annotator.ipynb
 example_workflows/xrf_class_structure.ipynb
+example_workflows/index_tracker.csv
 
 # Directories
+\example_workflows\cell_imgs
 \raw_xrf_data
 \annotated_XRF
 \annotated_xrf_data\
