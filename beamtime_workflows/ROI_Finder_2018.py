@@ -227,9 +227,13 @@ class XRF_image:
         self.region_vals=[]
         self.features_list = []
         self.center_coords=[]
+        self.XRF_track_files=[]
 
         for idx in range(len(self.regions)):
             self.cell_val_bin=self.regions[idx].image
+            
+            self.center_coords.append(self.regions[idx].centroid)
+            self.XRF_track_files.append(self.xrf_filename)
 
             self.region_vals.append(self.cell_val_bin)
             self.padded_cell = np.pad(self.cell_val_bin, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))

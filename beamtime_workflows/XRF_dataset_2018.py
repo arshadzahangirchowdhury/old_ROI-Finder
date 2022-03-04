@@ -56,6 +56,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X1=calc_SNR(x.d_Cu, x.binary_ero_dil)
 
     X1=x.features
+    
+    X_centers1=x.center_coords
+    X_xrf_track_file1=x.XRF_track_files
+    
     X1.shape
 
     #file 2
@@ -83,6 +87,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X2=calc_SNR(x.d_K, x.binary_ero_dil)
 
     X2=x.features
+    
+    X_centers2=x.center_coords
+    X_xrf_track_file2=x.XRF_track_files
+    
     X2.shape
 
     #file 3
@@ -110,6 +118,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X3=calc_SNR(x.d_K, x.binary_ero_dil)
 
     X3=x.features
+    
+    X_centers3=x.center_coords
+    X_xrf_track_file3=x.XRF_track_files
+    
     X3.shape
 
     #file 4
@@ -136,6 +148,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X4=calc_SNR(x.d_Cu, x.binary_ero_dil)
 
     X4=x.features
+    
+    X_centers4=x.center_coords
+    X_xrf_track_file4=x.XRF_track_files
+    
     X4.shape
 
     #file 5
@@ -164,6 +180,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
 
 
     X5=x.features
+    
+    X_centers5=x.center_coords
+    X_xrf_track_file5=x.XRF_track_files
+    
     X5.shape
 
     #file 6
@@ -190,6 +210,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X6=calc_SNR(x.d_Cu, x.binary_ero_dil)
 
     X6=x.features
+    
+    X_centers6=x.center_coords
+    X_xrf_track_file6=x.XRF_track_files
+    
     X6.shape
 
     #file 7
@@ -216,6 +240,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X7=calc_SNR(x.d_Cu, x.binary_ero_dil)
 
     X7=x.features
+    
+    X_centers7=x.center_coords
+    X_xrf_track_file7=x.XRF_track_files
+    
     X7.shape
 
     #file 8
@@ -243,6 +271,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X8=calc_SNR(x.d_Cu, x.binary_ero_dil)
 
     X8=x.features
+    
+    X_centers8=x.center_coords
+    X_xrf_track_file8=x.XRF_track_files
+    
     X8.shape
 
     # file 9
@@ -269,6 +301,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X9=calc_SNR(x.d_Cu, x.binary_ero_dil)
 
     X9=x.features
+    X_centers9=x.center_coords
+    X_xrf_track_file9=x.XRF_track_files
+    
     X9.shape
 
     #file 10
@@ -294,6 +329,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     SNR_X10=calc_SNR(x.d_K, x.binary_ero_dil)
 
     X10=x.features
+    
+    X_centers10=x.center_coords
+    X_xrf_track_file10=x.XRF_track_files
+
     X10.shape
 
     X=np.concatenate((X1,X2,X3,X4,X5,X6,X7,X8,X9,X10))
@@ -307,6 +346,13 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_Fe=np.concatenate((X_Fe1,X_Fe2,X_Fe3,X_Fe4,X_Fe5,X_Fe6,X_Fe7,X_Fe8,X_Fe9,X_Fe10))
     X_Ni=np.concatenate((X_Ni1,X_Ni2,X_Ni3,X_Ni4,X_Ni5,X_Ni6,X_Ni7,X_Ni8,X_Ni9,X_Ni10))
     X_TFY=np.concatenate((X_TFY1,X_TFY2,X_TFY3,X_TFY4,X_TFY5,X_TFY6,X_TFY7,X_TFY8,X_TFY9,X_TFY10))
+    
+    X_centers=np.concatenate((X_centers1,X_centers2,X_centers3,X_centers4,X_centers5,
+                              X_centers6,X_centers7,X_centers8,X_centers9,X_centers10))
+
+    X_xrf_track_files=np.concatenate((X_xrf_track_file1,X_xrf_track_file2,X_xrf_track_file3,X_xrf_track_file4,X_xrf_track_file5,
+                      X_xrf_track_file6,X_xrf_track_file7,X_xrf_track_file8,X_xrf_track_file9,X_xrf_track_file10))
+
 
     SNR=np.array([SNR_X1,SNR_X2,SNR_X3,SNR_X4,SNR_X5,SNR_X6,SNR_X7,SNR_X8,SNR_X9,SNR_X10])
     SNR_Df = pd.DataFrame()
@@ -357,7 +403,8 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     
     
     data_dict = {'X':X, 'X_bin':X_bin, 'X_Cu':X_Cu, 'X_Zn':X_Zn, 'X_Ca':X_Ca, 'X_K':X_K,
-                 'X_P':X_P,'X_S':X_S,'X_Fe':X_Fe,'X_Ni':X_Ni, 'X_TFY':X_TFY, 'principalDf':principalDf}
+                 'X_P':X_P,'X_S':X_S,'X_Fe':X_Fe,'X_Ni':X_Ni, 'X_TFY':X_TFY, 'principalDf':principalDf,
+                'X_centers':X_centers,'X_xrf_track_files':X_xrf_track_files}
     
     return data_dict
     
