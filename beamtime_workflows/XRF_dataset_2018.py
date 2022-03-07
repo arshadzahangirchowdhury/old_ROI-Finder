@@ -11,7 +11,6 @@ import ROI_Finder_2018
 from beamtime_config_2018 import *
 from ROI_Finder_2018 import *
 
-
 noise_type = 'none'
 base_file_path='/data02/AZC/XRF_Data/'
 

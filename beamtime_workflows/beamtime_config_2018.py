@@ -52,6 +52,8 @@ from skimage import data
 from skimage.filters import threshold_otsu, threshold_mean, threshold_local
 from skimage import measure
 
+import seaborn as sns
+
 
 
 

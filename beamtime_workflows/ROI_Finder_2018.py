@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
+import seaborn as sns
 
 
 class XRF_image:

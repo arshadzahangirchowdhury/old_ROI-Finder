@@ -718,6 +718,7 @@ def autoencoder_3D(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
 
     encoder_inputs = keras.Input(shape=(BASE_PATCH_WIDTH, BASE_PATCH_WIDTH, num_channels))
     x = layers.Conv2D(32, 3, activation="relu", strides=2, padding="same")(encoder_inputs)
+#     x = layers.MaxPooling2D(pool_size=(2, 2), strides=2, padding="same")(x)
     x = layers.Conv2D(64, 3, activation="relu", strides=2, padding="same")(x)
     x = layers.Flatten()(x)
     x = layers.Dense(16, activation="relu")(x)
@@ -733,6 +734,7 @@ def autoencoder_3D(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
     x = layers.Dense(7 * 7 * 64, activation="relu")(latent_inputs)
     x = layers.Reshape((7, 7, 64))(x)
     x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
+#     x = layers.UpSampling2D(size=(2, 2), data_format=None, interpolation='nearest')(x)
     x = layers.Conv2DTranspose(32, 3, activation="relu", strides=2, padding="same")(x)
     decoder_outputs = layers.Conv2DTranspose(num_channels, 3, activation="relu", padding="same")(x)
     decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
@@ -767,10 +769,10 @@ def autoencoder_3D_deep(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
     
     #Architechture
 
-    encoder_inputs = keras.Input(shape=(BASE_PATCH_WIDTH, BASE_PATCH_WIDTH, num_channels))
-    x = layers.Conv2D(16, 3, activation="relu", strides=2, padding="same")(encoder_inputs)
-    x = layers.Conv2D(32, 3, activation="relu", strides=2, padding="same")(x)
-    x = layers.Conv2D(64, 3, activation="relu", strides=2, padding="same")(x)
+    encoder_inputs = keras.Input(shape=(BASE_PATCH_WIDTH, BASE_PATCH_WIDTH, num_channels,1))
+    x = layers.Conv3D(16, 3, activation="relu", strides=2, padding="same")(encoder_inputs)
+    x = layers.Conv3D(32, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Conv3D(64, 3, activation="relu", strides=2, padding="same")(x)
     x = layers.Flatten()(x)
     x = layers.Dense(16, activation="relu")(x)
     z_mean = layers.Dense(latent_dim, name="z_mean")(x)
@@ -784,10 +786,10 @@ def autoencoder_3D_deep(latent_dim,num_channels,BASE_PATCH_WIDTH,summary='yes'):
     latent_inputs = keras.Input(shape=(latent_dim,))
     x = layers.Dense(8 * 8 * 64, activation="relu")(latent_inputs)
     x = layers.Reshape((8, 8, 64))(x)
-    x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
-    x = layers.Conv2DTranspose(32, 3, activation="relu", strides=2, padding="same")(x)
-#     x = layers.Conv2DTranspose(16, 3, activation="relu", strides=2, padding="same")(x)
-    decoder_outputs = layers.Conv2DTranspose(num_channels, 3, activation="relu", padding="same")(x)
+    x = layers.Conv3DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Conv3DTranspose(32, 3, activation="relu", strides=2, padding="same")(x)
+    x = layers.Conv3DTranspose(16, 3, activation="relu", strides=2, padding="same")(x)
+    decoder_outputs = layers.Conv3DTranspose(1, num_channels, 3, activation="relu", padding="same")(x)
     decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
     if summary=='yes':
         decoder.summary()
