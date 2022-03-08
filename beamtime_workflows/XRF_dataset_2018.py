@@ -57,6 +57,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res1=x.avg_res_list
     X_x_origin1=x.x_origin_list
     X_y_origin1=x.y_origin_list
+    
+    X_x_motor1=x.x_motor_center_list
+    X_y_motor1=x.y_motor_center_list
+
 
     SNR_X1=calc_SNR(x.d_Cu, x.binary_ero_dil)
 
@@ -93,6 +97,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res2=x.avg_res_list
     X_x_origin2=x.x_origin_list
     X_y_origin2=x.y_origin_list
+    
+    X_x_motor2=x.x_motor_center_list
+    X_y_motor2=x.y_motor_center_list
 
 
 
@@ -131,6 +138,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res3=x.avg_res_list
     X_x_origin3=x.x_origin_list
     X_y_origin3=x.y_origin_list
+    
+    X_x_motor3=x.x_motor_center_list
+    X_y_motor3=x.y_motor_center_list
 
 
 
@@ -169,6 +179,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res4=x.avg_res_list
     X_x_origin4=x.x_origin_list
     X_y_origin4=x.y_origin_list
+    
+    X_x_motor4=x.x_motor_center_list
+    X_y_motor4=x.y_motor_center_list
 
 
     SNR_X4=calc_SNR(x.d_Cu, x.binary_ero_dil)
@@ -207,6 +220,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res5=x.avg_res_list
     X_x_origin5=x.x_origin_list
     X_y_origin5=x.y_origin_list
+    
+    X_x_motor5=x.x_motor_center_list
+    X_y_motor5=x.y_motor_center_list
 
 
     SNR_X5=calc_SNR(x.d_Cu, x.binary_ero_dil)
@@ -245,6 +261,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res6=x.avg_res_list
     X_x_origin6=x.x_origin_list
     X_y_origin6=x.y_origin_list
+    
+    X_x_motor6=x.x_motor_center_list
+    X_y_motor6=x.y_motor_center_list
 
 
     SNR_X6=calc_SNR(x.d_Cu, x.binary_ero_dil)
@@ -282,6 +301,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res7=x.avg_res_list
     X_x_origin7=x.x_origin_list
     X_y_origin7=x.y_origin_list
+    
+    X_x_motor7=x.x_motor_center_list
+    X_y_motor7=x.y_motor_center_list
 
 
     SNR_X7=calc_SNR(x.d_Cu, x.binary_ero_dil)
@@ -320,6 +342,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res8=x.avg_res_list
     X_x_origin8=x.x_origin_list
     X_y_origin8=x.y_origin_list
+    
+    X_x_motor8=x.x_motor_center_list
+    X_y_motor8=x.y_motor_center_list
 
 
     SNR_X8=calc_SNR(x.d_Cu, x.binary_ero_dil)
@@ -357,6 +382,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res9=x.avg_res_list
     X_x_origin9=x.x_origin_list
     X_y_origin9=x.y_origin_list
+    
+    X_x_motor9=x.x_motor_center_list
+    X_y_motor9=x.y_motor_center_list
 
 
     SNR_X9=calc_SNR(x.d_Cu, x.binary_ero_dil)
@@ -391,6 +419,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     X_avg_res10=x.avg_res_list
     X_x_origin10=x.x_origin_list
     X_y_origin10=x.y_origin_list
+    
+    X_x_motor10=x.x_motor_center_list
+    X_y_motor10=x.y_motor_center_list
 
 
 
@@ -421,6 +452,13 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     
     X_x_origin=np.concatenate((X_x_origin1,X_x_origin2,X_x_origin3,X_x_origin4,X_x_origin5,X_x_origin6,X_x_origin7,X_x_origin8,X_x_origin9,X_x_origin10))
     X_y_origin=np.concatenate((X_y_origin1,X_y_origin2,X_y_origin3,X_y_origin4,X_y_origin5,X_y_origin6,X_y_origin7,X_y_origin8,X_y_origin9,X_y_origin10))
+    
+    
+    X_x_motor=np.concatenate((X_x_motor1,X_x_motor2,X_x_motor3,X_x_motor4,X_x_motor5,X_x_motor6,X_x_motor7,X_x_motor8,X_x_motor9,X_x_motor10))
+    X_y_motor=np.concatenate((X_y_motor1,X_y_motor2,X_y_motor3,X_y_motor4,X_y_motor5,X_y_motor6,X_y_motor7,X_y_motor8,X_y_motor9,X_y_motor10))
+ 
+    
+
     
     X_centers=np.concatenate((X_centers1,X_centers2,X_centers3,X_centers4,X_centers5,
                               X_centers6,X_centers7,X_centers8,X_centers9,X_centers10))
@@ -465,6 +503,10 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     principalDf['avg_res'] = X_avg_res
     principalDf['x_origin'] = X_x_origin
     principalDf['y_origin'] = X_y_origin
+    principalDf['x_motor'] = X_x_motor
+    principalDf['y_motor'] = X_y_motor
+
+    
     
     annotation_file_path=base_file_path + 'xrf_annotations_arshad_KO_full_indices.csv'
     KO_annotations = pd.read_csv(annotation_file_path)
@@ -490,6 +532,7 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
                  'X_P':X_P,'X_S':X_S,'X_Fe':X_Fe,'X_Ni':X_Ni, 'X_TFY':X_TFY, 'principalDf':principalDf,
                 'X_centers':X_centers,'X_xrf_track_files':X_xrf_track_files, 
                  'x_res':X_x_res, 'y_res':X_y_res,'avg_res':X_avg_res,'x_origin':X_x_origin,'y_origin':X_y_origin,
+                 'x_motor':X_x_motor,'y_motor':X_y_motor,
                 'BASE_PATCH_WIDTH':x.BASE_PATCH_WIDTH}
     
     return data_dict

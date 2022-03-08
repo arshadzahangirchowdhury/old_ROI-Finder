@@ -256,6 +256,10 @@ class XRF_image:
         self.x_origin_list= []
         self.y_origin_list= []
         
+        self.x_motor_center_list= []
+        self.y_motor_center_list= []
+
+        
 
         
 
@@ -280,7 +284,13 @@ class XRF_image:
             self.padded_cell = np.pad(self.cell_val_bin, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
             self.cell_list.append(self.padded_cell)
             self.center_list.append([math.floor(self.regions[idx].centroid[0]), math.floor(self.regions[idx].centroid[1])])
+            
         #     regions[idx].bbox
+            #calculate motor centers here
+            
+            self.x_motor_center_list.append(self.x_origin_list[idx] + self.x_res_list[idx]*self.center_list[idx][1])
+            self.y_motor_center_list.append(self.y_origin_list[idx] + self.y_res_list[idx]*self.center_list[idx][0])
+
 
             self.cell_Cu = self.d_Cu[self.regions[idx].bbox[0]:self.regions[idx].bbox[2],self.regions[idx].bbox[1]:self.regions[idx].bbox[3]]
             self.cell_Zn = self.d_Zn[self.regions[idx].bbox[0]:self.regions[idx].bbox[2],self.regions[idx].bbox[1]:self.regions[idx].bbox[3]]
