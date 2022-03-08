@@ -139,18 +139,24 @@ class XRF_image:
                         self.norm_d_TFY=norm_d
                         self.x_TFY,self.y_TFY=row['x_axis'], row['y_axis']
                         
+        
+        #motoro coordinate, steps, resolution
+        
         self.x_res=self.x_TFY[1]-self.x_TFY[0]
         self.y_res=self.y_TFY[1]-self.y_TFY[0]
         self.avg_res=(self.x_res+self.y_res)/2
         self.x_origin=self.x_TFY[0]
         self.y_origin=self.y_TFY[0]
-        print('x_res:',self.x_res)
-        print('y_res:',self.y_res)
-        print('avg_res:',self.avg_res)
         
-        print('x_origin:',self.x_origin)
-        print('y_origin:',self.y_origin)
-        #     print('Image shape: ',d.shape)
+        
+        #debug info
+        #print('x_res:',self.x_res)
+        #print('y_res:',self.y_res)
+        #print('avg_res:',self.avg_res)
+        
+        #print('x_origin:',self.x_origin)
+        #print('y_origin:',self.y_origin)
+        #print('Image shape: ',d.shape)
         
                     
         

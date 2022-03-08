@@ -258,7 +258,7 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
 
     #file 7
 
-    x= XRF_image(xrf_filename = '/data01/AZC/XRF_Data/bnp_fly0050_2018_1.h5',
+    x= XRF_image(base_file_path +'/bnp_fly0050_2018_1.h5',
                  BASE_PATCH_WIDTH=32, verbosity=False)
     x.load_xrf_data(hdf5_string='exchange_4')
     x.add_noise(noise=noise_type)
@@ -460,6 +460,12 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     
     #add res and origins to dataframe here
     
+    principalDf['x_res'] = X_x_res
+    principalDf['y_res'] = X_y_res
+    principalDf['avg_res'] = X_avg_res
+    principalDf['x_origin'] = X_x_origin
+    principalDf['y_origin'] = X_y_origin
+    
     annotation_file_path=base_file_path + 'xrf_annotations_arshad_KO_full_indices.csv'
     KO_annotations = pd.read_csv(annotation_file_path)
 
@@ -482,7 +488,9 @@ def load_XRF_dataset_2018(noise_type = 'none', base_file_path='/data01/AZC/XRF_D
     
     data_dict = {'X':X, 'X_bin':X_bin, 'X_Cu':X_Cu, 'X_Zn':X_Zn, 'X_Ca':X_Ca, 'X_K':X_K,
                  'X_P':X_P,'X_S':X_S,'X_Fe':X_Fe,'X_Ni':X_Ni, 'X_TFY':X_TFY, 'principalDf':principalDf,
-                'X_centers':X_centers,'X_xrf_track_files':X_xrf_track_files}
+                'X_centers':X_centers,'X_xrf_track_files':X_xrf_track_files, 
+                 'x_res':X_x_res, 'y_res':X_y_res,'avg_res':X_avg_res,'x_origin':X_x_origin,'y_origin':X_y_origin,
+                'BASE_PATCH_WIDTH':x.BASE_PATCH_WIDTH}
     
     return data_dict
     
