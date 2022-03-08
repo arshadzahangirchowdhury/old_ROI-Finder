@@ -102,46 +102,58 @@ class XRF_image:
                     if e == 'Cu':
                         self.d_Cu=d
                         self.norm_d_Cu=norm_d
-                        x_Cu,y_Cu=row['x_axis'], row['y_axis']
+                        self.x_Cu,self.y_Cu=row['x_axis'], row['y_axis']
                     if e == 'Zn':
                         self.d_Zn=d
                         self.norm_d_Zn=norm_d
-                        x_Zn,y_Zn=row['x_axis'], row['y_axis']
+                        self.x_Zn,self.y_Zn=row['x_axis'], row['y_axis']
                     if e == 'Ca':
                         self.d_Ca=d
                         self.norm_d_Ca=norm_d
-                        x_Ca,y_Ca=row['x_axis'], row['y_axis']
+                        self.x_Ca,self.y_Ca=row['x_axis'], row['y_axis']
                     if e == 'K':
                         self.d_K=d
                         self.norm_d_K=norm_d
-                        x_K,y_K=row['x_axis'], row['y_axis']
+                        self.x_K,self.y_K=row['x_axis'], row['y_axis']
                     if e == 'P':
                         self.d_P=d
                         self.norm_d_P=norm_d
-                        x_P,y_P=row['x_axis'], row['y_axis']
+                        self.x_P,self.y_P=row['x_axis'], row['y_axis']
                     if e == 'S':
                         self.d_S=d
                         self.norm_d_S=norm_d
-                        x_S,y_S=row['x_axis'], row['y_axis']
+                        self.x_S,self.y_S=row['x_axis'], row['y_axis']
 
                     if e == 'Fe':
                         self.d_Fe=d
                         self.norm_d_Fe=norm_d
-                        x_Fe,y_Fe=row['x_axis'], row['y_axis']
+                        self.x_Fe,self.y_Fe=row['x_axis'], row['y_axis']
 
                     if e == 'Ni':
                         self.d_Ni=d
                         self.norm_d_Ni=norm_d
-                        x_Ni,y_Ni=row['x_axis'], row['y_axis']
+                        self.x_Ni,self.y_Ni=row['x_axis'], row['y_axis']
 
                     if e == 'TFY':
                         self.d_TFY=d
                         self.norm_d_TFY=norm_d
-                        x_TFY,y_TFY=row['x_axis'], row['y_axis']
+                        self.x_TFY,self.y_TFY=row['x_axis'], row['y_axis']
+                        
+        self.x_res=self.x_TFY[1]-self.x_TFY[0]
+        self.y_res=self.y_TFY[1]-self.y_TFY[0]
+        self.avg_res=(self.x_res+self.y_res)/2
+        self.x_origin=self.x_TFY[0]
+        self.y_origin=self.y_TFY[0]
+        print('x_res:',self.x_res)
+        print('y_res:',self.y_res)
+        print('avg_res:',self.avg_res)
+        
+        print('x_origin:',self.x_origin)
+        print('y_origin:',self.y_origin)
         #     print('Image shape: ',d.shape)
         
                     
-    
+        
 
         
     
@@ -229,8 +241,30 @@ class XRF_image:
         self.features_list = []
         self.center_coords=[]
         self.XRF_track_files=[]
+        
+        #motor coordinate stuff
+        
+        self.x_res_list= []
+        self.y_res_list= []
+        self.avg_res_list= []
+        self.x_origin_list= []
+        self.y_origin_list= []
+        
+
+        
 
         for idx in range(len(self.regions)):
+            
+            #append motor coordinate stuff for each region so they can be retrived later via pandas
+            
+            self.x_res_list.append(self.x_res)
+            self.y_res_list.append(self.y_res) 
+            self.avg_res_list.append(self.avg_res)
+            self.x_origin_list.append(self.x_origin)
+            self.y_origin_list.append(self.y_origin)
+            
+            #cell extraction begins here
+            
             self.cell_val_bin=self.regions[idx].image
             
             self.center_coords.append(self.regions[idx].centroid)
