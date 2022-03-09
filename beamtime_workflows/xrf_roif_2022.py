@@ -52,7 +52,7 @@ class beamtime_XRF_image:
         #         print(xrf)
 
             scaler_names = dat['MAPS/scaler_names'][:].astype(str).tolist()
-            print('scaler_names:', scaler_names)
+#             print('scaler_names:', scaler_names)
             scaler_val = dat['MAPS/scalers'][:]
 #             print(scaler_val)
             norm = scaler_val[scaler_names.index(norm_ch)]
@@ -274,14 +274,34 @@ class beamtime_XRF_image:
             self.XRF_track_files.append(self.xrf_filename)
 
             self.region_vals.append(self.cell_val_bin)
-            self.padded_cell = np.pad(self.cell_val_bin, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+            p_a = np.abs(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2))
+            p_b = np.abs(math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2))
+            p_c = np.abs(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))
+            p_d = np.abs(math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))
+            
+            #debug for padding width values
+
+#             print('p_a, p_b,p_c,p_d:',[p_a,p_b,p_c,p_d])
+            
+            self.padded_cell = np.pad(self.cell_val_bin, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            
+            
+            
+            
+#             self.padded_cell = np.pad(self.cell_val_bin, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+            
             self.cell_list.append(self.padded_cell)
             self.center_list.append([math.floor(self.regions[idx].centroid[0]), math.floor(self.regions[idx].centroid[1])])
             #center list is given in (y,x)
             #calculate motor centers here
             
+            
+            
+            #motor coordinates calculated using only x_res
             self.x_motor_center_list.append(self.x_origin_list[idx] + self.x_res_list[idx]*self.center_list[idx][1])
-            self.y_motor_center_list.append(self.y_origin_list[idx] + self.y_res_list[idx]*self.center_list[idx][0])
+            self.y_motor_center_list.append(self.y_origin_list[idx] + self.x_res_list[idx]*self.center_list[idx][0])
             
             
         #     regions[idx].bbox
@@ -295,17 +315,44 @@ class beamtime_XRF_image:
             self.cell_Fe = self.d_Fe[self.regions[idx].bbox[0]:self.regions[idx].bbox[2],self.regions[idx].bbox[1]:self.regions[idx].bbox[3]]
             self.cell_Ni = self.d_Ni[self.regions[idx].bbox[0]:self.regions[idx].bbox[2],self.regions[idx].bbox[1]:self.regions[idx].bbox[3]]
             self.cell_TFY = self.d_TFY[self.regions[idx].bbox[0]:self.regions[idx].bbox[2],self.regions[idx].bbox[1]:self.regions[idx].bbox[3]]
+            
+            self.padded_bin = np.pad(self.cell_val_bin, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            
+            self.padded_Cu = np.pad(self.cell_Cu, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            self.padded_Zn = np.pad(self.cell_Zn, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            self.padded_Ca = np.pad(self.cell_Ca, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            
+            self.padded_K = np.pad(self.cell_K, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            self.padded_P = np.pad(self.cell_P, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            self.padded_S = np.pad(self.cell_S, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            
+            self.padded_Fe = np.pad(self.cell_Fe, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            self.padded_Ni = np.pad(self.cell_Ni, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
+            self.padded_TFY = np.pad(self.cell_TFY, ((p_a,p_b),(p_c,p_d)), mode='constant', constant_values=(0))
 
-            self.padded_bin = np.pad(self.cell_val_bin, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_Cu = np.pad(self.cell_Cu, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_Zn = np.pad(self.cell_Zn, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_Ca = np.pad(self.cell_Ca, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_K = np.pad(self.cell_K, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_P = np.pad(self.cell_P, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_S = np.pad(self.cell_S, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_Fe = np.pad(self.cell_Fe, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_Ni = np.pad(self.cell_Ni, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
-            self.padded_TFY = np.pad(self.cell_TFY, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+
+            
+            
+            
+#             self.padded_bin = np.pad(self.cell_val_bin, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_Cu = np.pad(self.cell_Cu, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_Zn = np.pad(self.cell_Zn, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_Ca = np.pad(self.cell_Ca, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_K = np.pad(self.cell_K, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_P = np.pad(self.cell_P, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_S = np.pad(self.cell_S, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_Fe = np.pad(self.cell_Fe, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_Ni = np.pad(self.cell_Ni, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
+            
+#             self.padded_TFY = np.pad(self.cell_TFY, ((math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[0])/2)),(math.floor((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2),math.ceil((self.BASE_PATCH_WIDTH-self.cell_val_bin.shape[1])/2))), mode='constant', constant_values=(0))
 
             self.binary_img.append(self.padded_bin)
             self.Patches_Cu.append(self.padded_Cu)
@@ -481,3 +528,85 @@ def accept(event):
         selector.disconnect()
         ax.set_title("")
         fig.canvas.draw()
+        
+        
+        
+def XRF_PCA(features, feature_names, high_comp=6, n_components=2):
+    
+    '''
+    arguments:
+    
+    features: array, contains feature for every extracted cell
+    feature_names: string, names of the currently used features
+    high_comp, int, an extra pca analysis to see how many components is required
+    n_components:int, number of components chosen to do PCA
+    
+    returns
+    
+    principalComponents:, array, with the principal components, assign it to dataframe columns as PC1, PC2 and so on
+    
+    '''
+
+    X_standard = StandardScaler().fit_transform(features)
+    # print(X_standard[0])
+
+    pca = PCA(n_components=2)
+    principalComponents = pca.fit_transform(X_standard)
+
+    
+    print('Cells, PCs', principalComponents.shape)
+
+    print('singular_values_:', pca.singular_values_)
+    print('explained_variance:', pca.explained_variance_)
+    print('components:', pca.components_)
+
+    fig = plt.figure(figsize=(6,3),dpi=75);
+
+    plt.scatter(pca.components_[0],pca.components_[1]) #, tick_label=PClabels
+    plt.title('Loading Scores')
+    plt.xlabel('PC1')
+    plt.ylabel('PC2')
+    plt.axhline()
+    plt.axvline()
+
+    feature_names = ['area','eccentricity','equiv. dia.','major length','minor length','perimeter',
+            'K','P','Ca','Zn',
+             'Fe']
+
+    for i, txt in enumerate(feature_names):
+        plt.annotate(txt, (pca.components_[0][i], pca.components_[1][i]), rotation=60, size=10)
+
+    plt.scatter(0,0)
+    plt.show()
+
+    #scree plot
+
+    high_pca = PCA(n_components=8)
+    high_pca.fit_transform(X_standard)
+
+    #calculate percentage of variation in each principal components
+    per_var=np.round(high_pca.explained_variance_ratio_*100, decimals=1)
+    PClabels =['PC' + str(x) for x in range(1,len(per_var)+1)]
+
+    fig = plt.figure(figsize=(6,3),dpi=75);
+    plt.bar(x=range(1, len(per_var)+1),height=per_var) #, tick_label=PClabels
+    plt.title('Scree Plot')
+    plt.ylabel('Percentage of Explained Variance')
+    plt.xlabel('Principal Component')
+    plt.show()
+    #zoom in on the important PCs
+    fig = plt.figure(figsize=(6,3),dpi=75);
+    plt.bar(x=range(1, len(per_var)+1),height=per_var) #, tick_label=PClabels
+    plt.title('Scree Plot (Significnt PCs)')
+    plt.ylabel('Percentage of Explained Variance')
+    plt.xlabel('Principal Component')
+    plt.xlim(0,75)
+    plt.show()
+
+    plt.figure(dpi=75)
+    plt.scatter(principalComponents[:,0],principalComponents[:,1], s=10)
+    plt.title('PCA-space untagged')
+    plt.xlabel('PC1')
+    plt.ylabel('PC2')
+    
+    return principalComponents
