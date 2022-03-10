@@ -28,7 +28,7 @@ class beamtime_XRF_image:
 #         global d_Cu, d_Zn, d_Ca, d_K, d_P, d_S,d_Fe, d_Ni, d_TFY
     
 #         norm_ch = NORM_CH # 2018 value
-        print('XRF', self.xrf_filename)
+#         print('XRF', self.xrf_filename)
         norm_ch = 'US_IC'
         value_offset=VALUE_OFFSET
         xrfdata = collections.defaultdict(list)
@@ -41,7 +41,7 @@ class beamtime_XRF_image:
             chs = dat['MAPS/channel_names'][:].astype(str).tolist()
         #         dat['MAPS/']
             
-            print('chs:', chs)
+#             print('chs:', chs)
             
 #             self.int_spec=dat['MAPS/int_spec'][:].astype(int).tolist()
 #             self.energy=dat['MAPS/energy'][:].astype(int).tolist()
