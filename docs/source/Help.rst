@@ -9,6 +9,6 @@ Thank you.
 Instrumentation Help
 ====================
 
-Please contact the 9-ID beamline stuff for questions relating to experimental details.
+Please contact the 9-ID beamline staff for questions relating to experimental details.
 
 
