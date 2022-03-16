@@ -1,5 +1,5 @@
-AI_XRF
-======
+ROI-Finder
+==========
 
 .. toctree::
    :maxdepth: 4

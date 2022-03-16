@@ -12,6 +12,14 @@ tools.misc.Utils module
    :undoc-members:
    :show-inheritance:
 
+tools.misc.exampledocs module
+-----------------------------
+
+.. automodule:: tools.misc.exampledocs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tools.misc.patches2d module
 ---------------------------
 
