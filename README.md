@@ -1,9 +1,14 @@
 # ROI-Finder
 Software for X-ray fluorescence imaging analysis using AI tools. The goal of development is to find regions of interest in X-ray fluoroscence images to better interpret the collected XRF data at the Advanced Photon Source. Based on the regions of interest, experiments will be steered to take finer resolution scans.
 
+
+<p align="center">
+  <img width="800" src="imgs/ROI-Finder.png">
+</p>
+
 ## Installation
 
-1. git clone https://github.com/arshadzahangirchowdhury/ROI-Finder
+1. git clone https://github.com/arshadzahangirchowdhury/ROI-Finder.git
 2. Install the packages via the AI_XRF_env.yml file.
 
 ## Instructions
@@ -29,9 +34,6 @@ The recommender tool allows the user to select an AI method, based on which reco
 
 In the example workflows directory, change the definitions inside config.py to adjust how figure, axes, colorbars and labels are rendered.
 
-## Who is the user?
+## Intended user?
 The software is being developed for Biologists and X-ray physicists.
 
-## License
-
-BSD License is pending approval.

@@ -2,6 +2,12 @@
 9-ID BNP ROI-Finder
 =====================================
 
+
+
+.. image:: imgs/ROI-Finder.png
+   :width: 640px
+   :alt: project
+
 Code Examples
 =============
 
