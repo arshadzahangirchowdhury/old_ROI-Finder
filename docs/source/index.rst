@@ -1,5 +1,5 @@
 
-9-ID BNP ROI-Finder
+ROI-Finder
 =====================================
 
 
@@ -8,15 +8,14 @@
    :width: 640px
    :alt: project
 
-Code Examples
-=============
+Install
+========
 
-An example of a code block to explain pieces of code if necessary.
+Clone from GitHub and install dependencies listed in .yaml file.
 
 .. code-block:: python
 
-    print 'hello'
-    >> hello
+    git clone https://github.com/arshadzahangirchowdhury/ROI-Finder.git
 
 
 

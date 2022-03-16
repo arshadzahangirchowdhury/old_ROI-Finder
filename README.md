@@ -1,9 +1,11 @@
+[![DOCS](https://readthedocs.org/projects/docs/badge/?version=latest)](https://roi-finder.readthedocs.io/en/latest/?badge=latest)
+
 # ROI-Finder
 Software for X-ray fluorescence imaging analysis using AI tools. The goal of development is to find regions of interest in X-ray fluoroscence images to better interpret the collected XRF data at the Advanced Photon Source. Based on the regions of interest, experiments will be steered to take finer resolution scans.
 
 
 <p align="center">
-  <img width="800" src="imgs/ROI-Finder.png">
+  <img width="500" src="imgs/ROI-Finder.png">
 </p>
 
 ## Installation

@@ -3,12 +3,10 @@ Help
 
 Please contact arshad.zahangir.bd@gmail.com for any questions.
 
-Thank you.
-
 
 Instrumentation Help
 ====================
 
-Please contact the 9-ID beamline staff for questions relating to experimental details.
+Please contact the 9-ID beamline Bionanoprobe(BNP) staff at the Advanced Photon Source(APS) for questions relating to experimental details.
 
 
