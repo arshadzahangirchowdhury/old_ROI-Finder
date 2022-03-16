@@ -1,20 +1,34 @@
-.. ROI-Finder documentation master file, created by
-   sphinx-quickstart on Wed Mar 16 09:42:26 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
-Welcome to ROI-Finder's documentation!
-======================================
+9-ID BNP ROI-Finder
+=====================================
+
+Code Examples
+=============
+
+An example of a code block to explain pieces of code if necessary.
+
+.. code-block:: python
+
+    print 'hello'
+    >> hello
+
+
+
+Content
+^^^^^
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   
+   About
+   License
+   Help
 
 
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
