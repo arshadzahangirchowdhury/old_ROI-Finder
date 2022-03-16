@@ -24,6 +24,8 @@ Content
    License
    Help
 
+   modules
+
 
 
 .. Indices and tables
