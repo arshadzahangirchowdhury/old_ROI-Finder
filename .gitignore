@@ -39,7 +39,6 @@ beamtime_workflows/fine_scans
 *.tiff
 *.jpg
 *.jpeg
-*.png
 
 # data
 *.h5
