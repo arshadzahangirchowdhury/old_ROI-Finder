@@ -17,9 +17,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'ROI-Finder'
-copyright = '2022, The AI-XRF team at Argonne National Laboratory'
-author = 'M Arshad Zahangir Chowdhury'
+project = '9idroif'
+copyright = '2022, AI-XRF Team'
+author = 'AI-XRF Team'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'
@@ -39,7 +39,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = []
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -47,12 +47,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
-
-html_theme_options = {
-    "rightsidebar": "false",
-    "relbarbgcolor": "black"
-}
+html_theme = 'alabaster'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
