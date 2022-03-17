@@ -42,17 +42,25 @@ The software is being developed for the users of the Bionanoprobe at the 9-ID be
 ## Developers
 
 M Arshad Zahangir Chowdhury
+
 Aniket Tekawade
 
 ## Data and Ideas
 
 Si Chen
+
 Grace Luo
+
 Zhengchun Liu
+
 Kiwon Ok
+
 Thomas O'Halloran
+
 Barry Lai
+
 Rajkumar Kettimuthu
+
 
 ## Funding
 
