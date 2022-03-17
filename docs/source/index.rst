@@ -28,6 +28,7 @@ Content
    About
    License
    Help
+   Acknowledgements
 
    modules
 
