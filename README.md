@@ -1,7 +1,7 @@
 [![DOCS](https://readthedocs.org/projects/docs/badge/?version=latest)](https://roi-finder.readthedocs.io/en/latest/?badge=latest)
 
 # ROI-Finder
-Software for X-ray fluorescence imaging analysis using AI tools. The goal of development is to find regions of interest in X-ray fluoroscence images to better interpret the collected XRF data at the Advanced Photon Source. Based on the regions of interest, experiments will be steered to take finer resolution scans.
+Software for intelligently guiding X-ray fluorescence scans to regions of interest using a suite of ML-based clustering algorithms. 
 
 
 <p align="center">
@@ -19,23 +19,41 @@ Software for X-ray fluorescence imaging analysis using AI tools. The goal of dev
 2. Segmenter tool is used to select .h5 files containing XRF images and extract region of interests (cells).
 3. Annotator tool is used to bin the extracted cells in two groups, accepts or rejects corresponding to alive or dead cells.
 
-## Segmenter workflow
+## Segmenter
 
 The segmenter workflow is designed to identify and explore the parameters which affect the conversion process of images to binary images.
 
-## Annotator workflow
+## Annotator
 
 The annotator tool allows the user to bin the XRF images into two categories called "accepts" and "rejects". These two categories can correspond to "live" and "dead" bacterial cells respectively. The user can preview the extracted cells from the segmenter workflow and then use the buttons to annotate and bin the data into two groups. The annotated data is stored to the user's local hard drive inside the annotated_XRF folder. This directory must not be renamed or moved.
 
-## Recommender workflow
+## Recommender
 
-The recommender tool allows the user to select an AI method, based on which recommendations are given to the user based on bacterial cells which are similar to selected cells by the user.
- 
+The recommender tool allows the user to select an AI method, based on which recommendations are given to the user based on bacterial cells which are similar to the selected cell.
 
-## How to set up the preferences for the workflows? 
+## Intended user
+The software is being developed for the users of the Bionanoprobe at the 9-ID beamline of the Advanced Photon Source (APS).  
 
-In the example workflows directory, change the definitions inside config.py to adjust how figure, axes, colorbars and labels are rendered.
 
-## Intended user?
-The software is being developed for Biologists and X-ray physicists.
+# Acknowledgments
 
+
+
+## Developers
+
+M Arshad Zahangir Chowdhury
+Aniket Tekawade
+
+## Data and Ideas
+
+Si Chen
+Grace Luo
+Zhengchun Liu
+Kiwon Ok
+Thomas O'Halloran
+Barry Lai
+Rajkumar Kettimuthu
+
+## Funding
+
+This project was funded by a Laboratory Directed Research and Development (LDRD) grant from Argonne National Laboratory.
