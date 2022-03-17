@@ -17,3 +17,12 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. rubric:: **Functions:**
+
+   .. autosummary::
+   
+      calc_patch_size
+      export_voids
+      to_regular_grid
+      upsample_sub_vols
