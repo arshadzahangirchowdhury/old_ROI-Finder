@@ -4,25 +4,25 @@ Acknowledgements
 
 Developers
 ----------
-M Arshad Zahangir Chowdhury
+M Arshad Zahangir Chowdhury, DSL, Argonne National Laboratory
 
-Aniket Tekawade
+Aniket Tekawade, DSL, Argonne National Laboratory
 
 Data and Ideas
 --------------
-Si Chen
+Si Chen, XSD, Argonne National Laboratory
 
-Grace Luo
+Grace Luo, XSD, Argonne National Laboratory
 
-Zhengchun Liu
+Zhengchun Liu, DSL, Argonne National Laboratory
 
-Kiwon Ok
+Kiwon Ok, Michigan State University
 
-Thomas O'Halloran
+Thomas O'Halloran, Michigan State University
 
-Barry Lai
+Barry Lai, XSD, Argonne National Laboratory
 
-Rajkumar Kettimuthu
+Rajkumar Kettimuthu, DSL, Argonne National Laboratory
 
 Funding
 -------
