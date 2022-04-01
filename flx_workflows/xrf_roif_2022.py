@@ -11,17 +11,34 @@ from matplotlib import rc
 from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
 import seaborn as sns
+import plotly.express as px
+
 
 
 
 
 class beamtime_XRF_image:
+    '''
+    beamtime_XRF_image class takes coarse scans as inuput
     
-    def __init__(self, xrf_filename = '/data01/AZC/XRF_Data/bnp_fly0001_2018_1.h5',
-             BASE_PATCH_WIDTH=32, verbosity=False, print_pv=False):
+    arguments:
+    xrf_filename
+    BASE_PATCH_WIDTH
+    norm_ch
+    value_offset
+    verbosity
+    print_pv
+    
+    '''
+    
+    def __init__(self, xrf_filename = '/path_to .h5 file',
+             BASE_PATCH_WIDTH=32, norm_ch = 'US_IC', value_offset = 1e-12,  verbosity=False, print_pv=False):
         self.xrf_filename =xrf_filename
         self.BASE_PATCH_WIDTH=BASE_PATCH_WIDTH
+        self.verbosity=verbosity
         self.print_pv=print_pv
+        self.norm_ch = norm_ch
+        self.value_offset=value_offset
         
         
         
@@ -30,8 +47,8 @@ class beamtime_XRF_image:
     
 #         norm_ch = NORM_CH # 2018 value
         print('XRF', self.xrf_filename)
-        norm_ch = 'US_IC'
-        value_offset=VALUE_OFFSET
+#         norm_ch = 'US_IC'
+#         value_offset=VALUE_OFFSET
         xrfdata = collections.defaultdict(list)
 
         with h5py.File(self.xrf_filename, 'r') as dat:
@@ -53,16 +70,20 @@ class beamtime_XRF_image:
             
             
             groups= list(dat.keys())
-#             print('groups', groups)
             maps= list(dat['MAPS'].keys())
-#             print('maps', maps)
             chs = dat['MAPS/channel_names'][:].astype(str).tolist()
+            
+            if self.verbosity ==True:
+                print('groups:', groups)
+                print('maps:', maps)
+                print('chs:', chs)
+            
     
             
 
         #         dat['MAPS/']
             
-#             print('chs:', chs)
+            
             
 #             self.int_spec=dat['MAPS/int_spec'][:].astype(int).tolist()
 #             self.energy=dat['MAPS/energy'][:].astype(int).tolist()
@@ -77,7 +98,7 @@ class beamtime_XRF_image:
 #             print('scaler_names:', scaler_names)
             scaler_val = dat['MAPS/scalers'][:]
 #             print(scaler_val)
-            norm = scaler_val[scaler_names.index(norm_ch)]
+            norm = scaler_val[scaler_names.index(self.norm_ch)]
 #             print('norm:', norm)
             for e in chs:
                 chidx = chs.index(e)
@@ -96,17 +117,24 @@ class beamtime_XRF_image:
         
         
         xrfdata = pd.DataFrame(xrfdata)
-        #     print(xrfdata)
-
+        self.xrfdata=xrfdata
+        
+        if self.verbosity ==True:
+            print('XRF info:',xrfdata.columns)
+        
+        
+        
+    def load_element_maps(self, selected_elm_maps=['Cu','Zn','Ca', 'K', 'P', 'S','Fe','Ni','Total_Fluorescence_Yield']):
 #         elms=['Cu','Zn','Ca', 'K', 'P', 'S','Fe','Total_Fluorescence_Yield']#Default elms
-        elms=['Cu','Zn','Ca', 'K', 'P', 'S','Fe','Cl','Total_Fluorescence_Yield']#Default elms
-        for i, row in xrfdata.iterrows():
+        elms=selected_elm_maps #Default elms
+        print(selected_elm_maps)
+        for i, row in self.xrfdata.iterrows():
                 sc = row['scan_num'][0:row['scan_num'].index('.')]
                 for e in elms:
                     d = row[e]
 
                     d[np.isnan(d) | np.isinf(d)] = 0
-                    norm_d = (d - np.min(d)) / (np.max(d) - np.min(d)) + value_offset
+                    norm_d = (d - np.min(d)) / (np.max(d) - np.min(d)) + self.value_offset
                     ss = np.round(np.abs(np.diff(row['x_axis']))[0], 2)
                     if e == 'Cu':
                         self.d_Cu=d
@@ -138,7 +166,7 @@ class beamtime_XRF_image:
                         self.norm_d_Fe=norm_d
                         self.x_Fe,self.y_Fe=row['x_axis'], row['y_axis']
 
-                    if e == 'Cl':
+                    if e == 'Ni':
                         
                         self.d_Ni=d
                         self.norm_d_Ni=norm_d
@@ -410,12 +438,12 @@ class beamtime_XRF_image:
             # define feature vector using averages
             self.avg_res
             
-            self.x = np.asarray([self.avg_res*self.avg_res*self.regions[idx].area, 
+            self.x = np.asarray([self.x_res*self.x_res*self.regions[idx].area, 
              self.regions[idx].eccentricity, 
-             self.avg_res*self.regions[idx].equivalent_diameter, 
-             self.avg_res*self.regions[idx].major_axis_length,
-             self.avg_res*self.regions[idx].minor_axis_length,
-             self.avg_res*self.regions[idx].perimeter,
+             self.x_res*self.regions[idx].equivalent_diameter, 
+             self.x_res*self.regions[idx].major_axis_length,
+             self.x_res*self.regions[idx].minor_axis_length,
+             self.x_res*self.regions[idx].perimeter,
              np.amax(self.Patches_K[idx]),
              np.amax(self.Patches_P[idx]),
              np.amax(self.Patches_Ca[idx]),
@@ -557,26 +585,30 @@ def accept(event):
         
         
         
-def XRF_PCA(features, feature_names, high_comp=6, n_components=2,annot_txt_size=10,dpi=75):
+def XRF_PCA(features, feature_names, high_comp=2, n_components=2,annot_txt_size=10,dpi=75,marker_size=5,save_plots=True):
     
     '''
+    Wrapper function around sklearn PCA
     arguments:
     
     features: array, contains feature for every extracted cell
     feature_names: string, names of the currently used features
-    high_comp, int, an extra pca analysis to see how many components is required
+    high_comp, int, an extra pca analysis to see how many components is required. Must be either number of features or number of extracted cells, whichever is the lowest.
     n_components:int, number of components chosen to do PCA
-    
+    annot_txt_size: size of text in 2D plots for marking scatter points with feature names
+    dpi:dpi
+    marker_size:For 3D plots
     returns
     
     principalComponents:, array, with the principal components, assign it to dataframe columns as PC1, PC2 and so on
+    pca.components_: array, loading scores for the corresponding PCs
     
     '''
 
     X_standard = StandardScaler().fit_transform(features)
     # print(X_standard[0])
 
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=n_components)
     principalComponents = pca.fit_transform(X_standard)
 
     
@@ -585,29 +617,52 @@ def XRF_PCA(features, feature_names, high_comp=6, n_components=2,annot_txt_size=
     print('singular_values_:', pca.singular_values_)
     print('explained_variance:', pca.explained_variance_)
     print('components:', pca.components_)
+    
+    if n_components == 2:
+    
+        fig = plt.figure(figsize=(6,3),dpi=dpi);
 
-    fig = plt.figure(figsize=(6,3),dpi=dpi);
+        plt.scatter(pca.components_[0],pca.components_[1]) #, tick_label=PClabels
+        plt.title('Loading Scores')
+        plt.xlabel('PC1')
+        plt.ylabel('PC2')
+        plt.axhline()
+        plt.axvline()
+        
 
-    plt.scatter(pca.components_[0],pca.components_[1]) #, tick_label=PClabels
-    plt.title('Loading Scores')
-    plt.xlabel('PC1')
-    plt.ylabel('PC2')
-    plt.axhline()
-    plt.axvline()
+    #     feature_names = ['area','eccentricity','equiv. dia.','major length','minor length','perimeter',
+    #             'K','P','Ca','Zn',
+    #              'Fe']
 
-    feature_names = ['area','eccentricity','equiv. dia.','major length','minor length','perimeter',
-            'K','P','Ca','Zn',
-             'Fe']
+        for i, txt in enumerate(feature_names):
+            plt.annotate(txt, (pca.components_[0][i], pca.components_[1][i]), rotation=60, size=annot_txt_size)
 
-    for i, txt in enumerate(feature_names):
-        plt.annotate(txt, (pca.components_[0][i], pca.components_[1][i]), rotation=60, size=annot_txt_size)
+        plt.scatter(0,0)
+#         plt.tight_layout()
+        plt.show()
+        if save_plots==True:
+            plt.savefig('../figures/PCA_ls.jpg')
+    
+    if n_components == 3:
+#         sns.set(style = "darkgrid")
 
-    plt.scatter(0,0)
-    plt.show()
-
+        fig = px.scatter_3d(x=pca.components_[0], y=pca.components_[1], z=pca.components_[2], text=feature_names)
+        fig.update_traces(marker_size = marker_size)
+        fig.update_layout(scene = dict(
+                    xaxis_title='PC1',
+                    yaxis_title='PC2',
+                    zaxis_title='PC3'),
+                    width=700)
+#         fig.tight_layout()
+        fig.show()
+        if save_plots==True:
+            fig.write_image('../figures/PCA_ls_3D.jpg')
+        
+        
+    
     #scree plot
 
-    high_pca = PCA(n_components=8)
+    high_pca = PCA(n_components=high_comp)
     high_pca.fit_transform(X_standard)
 
     #calculate percentage of variation in each principal components
@@ -619,7 +674,12 @@ def XRF_PCA(features, feature_names, high_comp=6, n_components=2,annot_txt_size=
     plt.title('Scree Plot')
     plt.ylabel('Percentage of Explained Variance')
     plt.xlabel('Principal Component')
+    plt.tight_layout()
     plt.show()
+    
+    if save_plots==True:
+        fig.savefig('../figures/PCA_variance.jpg')
+        
     #zoom in on the important PCs
     fig = plt.figure(figsize=(6,3),dpi=dpi);
     plt.bar(x=range(1, len(per_var)+1),height=per_var) #, tick_label=PClabels
@@ -627,12 +687,57 @@ def XRF_PCA(features, feature_names, high_comp=6, n_components=2,annot_txt_size=
     plt.ylabel('Percentage of Explained Variance')
     plt.xlabel('Principal Component')
     plt.xlim(0,75)
+    plt.tight_layout()
     plt.show()
-
-    plt.figure(dpi=dpi)
-    plt.scatter(principalComponents[:,0],principalComponents[:,1], s=10)
-    plt.title('PCA-space untagged')
-    plt.xlabel('PC1')
-    plt.ylabel('PC2')
+    if save_plots==True:
+        fig.savefig('../figures/High_PCA_variance.jpg')
     
-    return principalComponents
+    if n_components == 2:
+        plt.figure(dpi=dpi)
+        plt.scatter(principalComponents[:,0],principalComponents[:,1], s=10)
+        plt.title('PCA-space untagged')
+        plt.xlabel('PC1')
+        plt.ylabel('PC2')
+        plt.tight_layout()
+        if save_plots==True:
+            plt.savefig('../figures/PCA_space.jpg')
+        
+    if n_components == 3:
+            fig = px.scatter_3d(x=principalComponents[:,0], y=principalComponents[:,1], z=principalComponents[:,2])
+            fig.update_traces(marker_size = marker_size)
+            fig.update_layout(scene = dict(
+                        xaxis_title='PC1',
+                        yaxis_title='PC2',
+                        zaxis_title='PC3'),
+                        width=700)
+#             fig.tight_layout()
+            fig.show()
+            if save_plots==True:
+                fig.write_image('../figures/PCA_space_3D.jpg')
+    
+    
+    return principalComponents, pca.components_
+
+def view_PC_feature_relation(dataframe, PC_names, feature_list, hue,save_plots=True):
+    '''
+    argument:
+    
+    dataframe: pandas dataframe, consists of PC1, PC2 ... and so on, and the features used to construct the dataframe.
+    PC_names: list, list of the columns containing PCs
+    feature_list: list, list of the columns we wish to plot. It is recommended to pass two original features at a time for better results.
+    hue:str, column name of the pandas dataframe for tagging scatter points in the pairplot
+    
+    returns:
+    seaborn pairplots of showing correlations amongst PC and the original features.
+    '''
+    
+
+    sns.pairplot(
+        dataframe, hue=hue,
+#         vars=PC_names+feature_list,
+        x_vars=feature_list,
+        y_vars=PC_names, height=4,corner=False
+    )
+    plt.tight_layout()
+    if save_plots==True:
+                plt.savefig('../figures/PCA_features_rel.jpg')
